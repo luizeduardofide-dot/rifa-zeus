@@ -13,102 +13,116 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO (COMPATÍVEL COM TODOS OS CELULARES) ---
+# --- DESIGN CUSTOMIZADO (COMPATIBILIDADE MOBILE STREAMLIT) ---
 st.markdown("""
     <style>
-    /* Força o fundo escuro em tudo */
-    .stApp { background-color: #0b0c10; color: #ffffff; }
+    /* Força o fundo escuro geral */
+    .stApp { 
+        background-color: #0b0c10; 
+        color: #ffffff; 
+    }
     
-    /* BLOQUEIO TOTAL DE ROLAGEM HORIZONTAL */
+    /* REMOVE MARGENS LATERAIS DA PÁGINA E TRAVA ROLAGEM HORIZONTAL */
     html, body, [data-testid="stAppViewContainer"], .main {
         overflow-x: hidden !important;
         max-width: 100vw !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
     }
     
+    [data-testid="stMainBlockContainer"], .block-container {
+        padding-left: 8px !important;
+        padding-right: 8px !important;
+        padding-top: 1rem !important;
+        max-width: 100% !important;
+    }
+
     img { border-radius: 15px; }
     
-    /* --- CORREÇÃO DO LOGO --- */
+    /* --- CORREÇÃO DO LOGO NO MOBILE --- */
     @media (max-width: 768px) {
-        div[data-testid="column"]:first-child img {
-            max-width: 90px !important;
+        div[data-testid="stColumn"]:first-child img {
+            max-width: 80px !important;
             margin: 0 auto;
             display: block;
         }
     }
     
     /* --- PROMOÇÕES --- */
-    .promo-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; justify-content: center; }
-    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 15px; text-align: center; flex: 1 1 110px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
-    .promo-card.destaque { border: 2px solid #ffcc00; box-shadow: 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.05); }
-    .promo-qtd { font-size: 1.1em; font-weight: bold; color: #ffffff; margin-bottom: 5px;}
-    .promo-valor { font-size: 1.3em; font-weight: 900; color: #28a745; }
-    .promo-tag { font-size: 0.7em; color: #0b0c10; background-color:#ffcc00; padding: 3px 8px; border-radius: 15px; font-weight: bold; margin-top: 8px; display: inline-block;}
+    .promo-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
+    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 12px; text-align: center; flex: 1 1 100px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
+    .promo-card.destaque { border: 2px solid #ffcc00; box-shadow: 0 0 12px rgba(255, 204, 0, 0.4); transform: scale(1.03); }
+    .promo-qtd { font-size: 1em; font-weight: bold; color: #ffffff; margin-bottom: 4px;}
+    .promo-valor { font-size: 1.2em; font-weight: 900; color: #28a745; }
+    .promo-tag { font-size: 0.65em; color: #0b0c10; background-color:#ffcc00; padding: 2px 6px; border-radius: 12px; font-weight: bold; margin-top: 6px; display: inline-block;}
     
-    /* --- ESTILO BASE DOS BOTÕES (DARK) --- */
+    /* --- ESTILO DOS BOTÕES DA GRADE (DARK) --- */
     button[kind="secondary"] {
         background-color: #1f2833 !important;
         border: 1px solid #45a29e !important;
         color: #ffffff !important;
-        border-radius: 8px !important;
-        height: 48px !important;
+        border-radius: 6px !important;
+        height: 42px !important;
         width: 100% !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
+        font-weight: bold !important;
         padding: 0 !important;
-        transition: 0.2s;
     }
-    button[kind="secondary"]:hover { background-color: #45a29e !important; border-color: #ffffff !important; }
-    button[kind="secondary"]:active { background-color: #28a745 !important; }
+    button[kind="secondary"]:hover { background-color: #45a29e !important; color: #ffffff !important; }
 
     button[kind="primary"] {
         background-color: #28a745 !important;
         border: 2px solid #ffffff !important;
         color: #ffffff !important;
-        border-radius: 8px !important;
-        height: 48px !important;
+        border-radius: 6px !important;
+        height: 42px !important;
         width: 100% !important;
         font-weight: 900 !important;
-        font-size: 16px !important;
+        font-size: 15px !important;
         padding: 0 !important;
     }
 
     .caixa-status {
         display: flex; flex-direction: column; align-items: center; justify-content: center;
-        height: 48px; border-radius: 8px; font-weight: bold; font-size: 0.85em; line-height: 1.2; width: 100%;
+        height: 42px; border-radius: 6px; font-weight: bold; font-size: 0.8em; line-height: 1.1; width: 100%;
     }
     .box-res { background-color: #ffc107; color: #000000; border: 1px solid #d39e00; }
     .box-pago { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
 
     /* ========================================================= */
-    /* A MÁGICA INFALÍVEL PARA CELULARES (SEM USAR :has) */
+    /* FORÇAR 5 COLUNAS LADO A LADO EM QUALQUER CELULAR          */
     /* ========================================================= */
-    
     @media (max-width: 768px) {
-        /* 1. Força os blocos a não empilharem sozinhos, permitindo a quebra de linha natural */
-        div[data-testid="stHorizontalBlock"] {
+        /* Container das linhas: impede empilhamento vertical */
+        div[data-testid="stHorizontalBlock"],
+        div[data-testid="horizontalBlock"],
+        div[class*="stHorizontalBlock"] {
             display: flex !important;
             flex-direction: row !important;
-            flex-wrap: wrap !important;
-            justify-content: space-between !important;
-            gap: 4px !important;
-            margin-bottom: 4px !important;
+            flex-wrap: nowrap !important;
+            gap: 3px !important;
+            margin-bottom: 3px !important;
+            width: 100% !important;
         }
 
-        /* 2. Seleciona EXATAMENTE os blocos que possuem 5 colunas (nossa grade de números) 
-           e força eles a terem 18% da tela cada um. 18% * 5 = 90% (evita vazar a tela!) */
-        div[data-testid="column"]:first-child:nth-last-child(5),
-        div[data-testid="column"]:first-child:nth-last-child(5) ~ div[data-testid="column"] {
-            width: 18.5% !important;
-            flex: 0 0 18.5% !important;
-            min-width: 18.5% !important;
+        /* Cada coluna divide o espaço exatamente igual (20% cada) */
+        div[data-testid="stColumn"],
+        div[data-testid="column"],
+        div[class*="stColumn"] {
+            width: 0 !important;
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
             padding: 0 !important;
+            margin: 0 !important;
         }
 
-        /* 3. Ajuste do tamanho dos botões para o celular ficar elegante */
+        /* Garante que os seletores internos do Streamlit acompanhem o tamanho */
+        div[data-testid="stElementContainer"],
+        div[data-testid="stButton"] {
+            width: 100% !important;
+        }
+
         button[kind="secondary"], button[kind="primary"], .caixa-status {
-            height: 42px !important;
-            font-size: 14px !important;
+            height: 38px !important;
+            font-size: 13px !important;
         }
     }
     </style>
@@ -154,7 +168,7 @@ if "reserva_concluida" not in st.session_state:
 if "dados_reserva" not in st.session_state:
     st.session_state.dados_reserva = {}
 
-# --- FUNÇÃO DE CLIQUE SEGURO (CALLBACK) ---
+# --- FUNÇÃO DE CLIQUE SEGURO ---
 def toggle_numero(num):
     if num in st.session_state.carrinho:
         st.session_state.carrinho.remove(num)
@@ -242,7 +256,6 @@ with aba_comprar:
     st.subheader("👇 Clique nos quadradinhos para selecionar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    # Laço para criar 5 colunas por linha
     cols_por_linha = 5
     for i in range(0, TOTAL_NUMEROS, cols_por_linha):
         cols = st.columns(cols_por_linha)
