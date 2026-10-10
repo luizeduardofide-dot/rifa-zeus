@@ -290,6 +290,10 @@ with aba_comprar:
     st.subheader("👇 Clique nos quadradinhos para selecionar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
+    # AVISO EXPLÍCITO EM DESTAQUE QUANDO HOUVER NÚMEROS SELECIONADOS
+    if len(st.session_state.carrinho) > 0:
+        st.warning(f"🛒 **{len(st.session_state.carrinho)} número(s) selecionado(s)!** Role até o **final da grade de números (no fim da página)** para preencher seu nome e gerar o PIX.")
+
     cols_por_linha = 5
     for i in range(0, TOTAL_NUMEROS, cols_por_linha):
         cols = st.columns(cols_por_linha)
@@ -334,17 +338,17 @@ with aba_comprar:
         qtd_selecionada = len(st.session_state.carrinho)
         valor_final = calcular_total(qtd_selecionada)
         
-        st.header("🛒 Fechar Pedido")
-        st.write(f"Você selecionou **{qtd_selecionada}** número(s): {sorted(st.session_state.carrinho)}")
+        st.header("🛒 Fechar Pedido / Finalizar Compra")
+        st.write(f"Você selecionou **{qtd_selecionada}** número(s): **{sorted(st.session_state.carrinho)}**")
         st.info(f"💰 **Valor Total com Desconto: R$ {valor_final:.2f}**")
         
         col_nome, col_tel = st.columns(2)
-        nome_comprador = col_nome.text_input("Seu Nome e Sobrenome:")
+        nome_comprador = col_nome.text_input("Nome Completo:")
         tel_comprador = col_tel.text_input("Seu WhatsApp (com DDD):")
         
         if st.button("Confirmar Reserva e Gerar PIX", type="primary", use_container_width=True):
             if not nome_comprador or not tel_comprador:
-                st.error("Por favor, preencha seu nome e WhatsApp para continuar.")
+                st.error("Por favor, preencha seu nome completo e WhatsApp para continuar.")
             else:
                 numeros_atualizados, compradores_atualizados = carregar_dados()
                 conflito = [n for n in st.session_state.carrinho if numeros_atualizados.get(n) != "Disponível"]
