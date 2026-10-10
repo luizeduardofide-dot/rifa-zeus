@@ -9,18 +9,19 @@ from PIL import Image
 st.set_page_config(
     page_title="Rifa Equipe Zeus - Fórmula SAE",
     page_icon="🏎️",
-    layout="centered"
+    layout="centered",
+    initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & GRADE RESPONSIVA) ---
+# --- DESIGN CUSTOMIZADO (TRAVAMENTO DE GRADE E BOTÕES DARK) ---
 st.markdown("""
     <style>
+    /* Força o fundo escuro em tudo */
     .stApp { background-color: #0b0c10; color: #ffffff; }
     
-    /* Arredondar cantos das imagens para um look premium */
     img { border-radius: 15px; }
     
-    /* --- CORREÇÃO DO LOGÓTIPO NO CELULAR --- */
+    /* --- CORREÇÃO DO LOGO NO CELULAR --- */
     @media (max-width: 768px) {
         div[data-testid="column"]:first-child img {
             max-width: 90px !important;
@@ -29,47 +30,79 @@ st.markdown("""
         }
     }
     
-    /* --- ESTILOS PARA AS PROMOÇÕES --- */
-    .promo-container { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; }
-    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 15px; text-align: center; flex: 1 1 120px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
+    /* --- PROMOÇÕES --- */
+    .promo-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 25px; justify-content: center; }
+    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 15px; text-align: center; flex: 1 1 110px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
     .promo-card.destaque { border: 2px solid #ffcc00; box-shadow: 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.05); }
-    .promo-qtd { font-size: 1.1em; font-weight: bold; color: #ffffff; margin-bottom: 8px;}
-    .promo-valor { font-size: 1.4em; font-weight: 900; color: #28a745; }
-    .promo-tag { font-size: 0.75em; color: #0b0c10; background-color:#ffcc00; padding: 3px 8px; border-radius: 15px; font-weight: bold; margin-top: 10px; display: inline-block;}
+    .promo-qtd { font-size: 1.1em; font-weight: bold; color: #ffffff; margin-bottom: 5px;}
+    .promo-valor { font-size: 1.3em; font-weight: 900; color: #28a745; }
+    .promo-tag { font-size: 0.7em; color: #0b0c10; background-color:#ffcc00; padding: 3px 8px; border-radius: 15px; font-weight: bold; margin-top: 8px; display: inline-block;}
     
-    /* Customizar a barra de progresso */
-    .stProgress > div > div > div { background-color: #28a745; }
-
-    /* --- CORREÇÃO DOS BOTÕES NATIVOS (NÃO EMPILHAR NO CELULAR) --- */
+    /* --- MAGIA CSS: GRADE PERFEITA NO CELULAR E BOTÕES ESCUROS --- */
+    
+    /* 1. Trava as linhas para NÃO empilhar no celular */
     div[data-testid="stHorizontalBlock"] {
         gap: 6px !important;
+        margin-bottom: 6px !important;
+        flex-wrap: nowrap !important;
     }
     
-    /* Força as colunas a ficarem lado a lado mesmo em telas muito pequenas */
     @media (max-width: 768px) {
         div[data-testid="stHorizontalBlock"] {
-            flex-wrap: nowrap !important;
-            flex-direction: row !important;
+            flex-direction: row !important; /* Força ficar lado a lado */
         }
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            width: auto !important;
+        div[data-testid="column"] {
+            width: 20% !important; /* Garante 5 por linha */
             min-width: 0 !important;
-            flex: 1 1 0% !important;
+            padding: 0 !important;
         }
     }
-    
-    /* Caixas personalizadas para Reservado e Pago (mesma altura dos botões) */
-    .box-res, .box-pago {
+
+    /* 2. Remove a "caixinha branca" e deixa o botão escuro (Disponível) */
+    button[kind="secondary"] {
+        background-color: #1f2833 !important;
+        border: 1px solid #45a29e !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        height: 48px !important;
+        width: 100% !important;
+        font-size: 16px !important;
+        padding: 0 !important;
+        transition: 0.2s;
+    }
+    button[kind="secondary"]:hover {
+        background-color: #45a29e !important;
+        border-color: #ffffff !important;
+    }
+    button[kind="secondary"]:active {
+        background-color: #28a745 !important;
+    }
+
+    /* 3. Estilo do botão quando clicado/carrinho (Selecionado) */
+    button[kind="primary"] {
+        background-color: #28a745 !important;
+        border: 2px solid #ffffff !important;
+        color: #ffffff !important;
+        border-radius: 8px !important;
+        height: 48px !important;
+        width: 100% !important;
+        font-weight: 900 !important;
+        font-size: 16px !important;
+        padding: 0 !important;
+    }
+
+    /* 4. Caixas de Reservado e Pago (Mesmo tamanho dos botões) */
+    .caixa-status {
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        height: 100%;
-        min-height: 45px;
+        height: 48px;
         border-radius: 8px;
         font-weight: bold;
         font-size: 0.85em;
         line-height: 1.2;
+        width: 100%;
     }
     .box-res { background-color: #ffc107; color: #000000; border: 1px solid #d39e00; }
     .box-pago { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
@@ -137,7 +170,7 @@ def calcular_total(qtd):
     total += qtd * 3.0
     return total
 
-# --- CABEÇALHO: LOGO E TÍTULO ALINHADOS ---
+# --- CABEÇALHO ---
 col_logo, col_titulo = st.columns([1, 4])
 
 with col_logo:
@@ -150,7 +183,7 @@ with col_titulo:
 
 st.markdown("---")
 
-# --- BANNER CENTRAL: CORTE AUTOMÁTICO DO CARRO ---
+# --- BANNER DO CARRO ---
 if os.path.exists("fotocarro.jpeg"):
     img_original = Image.open("fotocarro.jpeg")
     w, h = img_original.size
@@ -160,7 +193,7 @@ if os.path.exists("fotocarro.jpeg"):
     img_cortada = img_original.crop((0, topo, w, fundo))
     st.image(img_cortada, use_container_width=True)
 
-# --- BARRA DE PROGRESSO DE VENDAS ---
+# --- BARRA DE PROGRESSO ---
 numeros_indisponiveis = sum(1 for status in st.session_state.numeros_status.values() if status != "Disponível")
 porcentagem_vendida = numeros_indisponiveis / TOTAL_NUMEROS
 
@@ -169,36 +202,19 @@ st.markdown(f"### 🔥 Já vendemos **{numeros_indisponiveis}** de **{TOTAL_NUME
 st.progress(porcentagem_vendida)
 st.markdown("---")
 
-# --- PROJETO E PRÊMIOS (RESUMO) ---
-col_proj, col_premio = st.columns(2)
-
-with col_proj:
-    st.subheader("🏁 O Projeto")
-    st.write("Nós projetamos e construímos um carro de corrida do zero para competir! Sua contribuição é o combustível para cobrir os custos de manufatura e colocar o nosso projeto na pista.")
-
-with col_premio:
-    st.subheader("🏆 Sorteio: 18/12")
-    st.write("Confira as fotos detalhadas dos prêmios na aba **'Ver Prêmios'** logo abaixo!")
-
-st.write("") 
-
 # --- SISTEMA DE ABAS (TABS) ---
 aba_comprar, aba_premios = st.tabs(["🎟️ Comprar Números", "🏆 Ver Prêmios"])
 
 # --- CONTEÚDO DA ABA 1: COMPRAR NÚMEROS ---
 with aba_comprar:
     st.header("💰 Combos Promocionais")
-    st.write("Escolha seus números clicando na grade. O sistema calcula o **melhor desconto automaticamente**!")
+    st.write("Escolha seus números clicando na grade. O sistema calcula o **desconto automaticamente**!")
 
     st.markdown("""
     <div class="promo-container">
         <div class="promo-card">
             <div class="promo-qtd">🎟️ 1 Número</div>
             <div class="promo-valor">R$ 3,00</div>
-        </div>
-        <div class="promo-card">
-            <div class="promo-qtd">🎟️ 3 Números</div>
-            <div class="promo-valor">R$ 9,00</div>
         </div>
         <div class="promo-card destaque">
             <div class="promo-qtd">🔥 4 Números</div>
@@ -217,11 +233,11 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS (CLICÁVEIS) ---
+    # --- SELEÇÃO DE NÚMEROS (AGORA RESPONSIVA E ESCURA) ---
     st.subheader("👇 Clique nos quadradinhos para selecionar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    # Layout nativo corrigido por CSS para não quebrar no celular
+    # Layout nativo travado com CSS para ficar em Grid (5 por linha)
     cols_por_linha = 5
     for i in range(0, TOTAL_NUMEROS, cols_por_linha):
         cols = st.columns(cols_por_linha)
@@ -230,15 +246,15 @@ with aba_comprar:
             if num <= TOTAL_NUMEROS:
                 status = st.session_state.numeros_status[num]
                 
-                # Usando on_click para evitar perda de clique (seleção múltipla estável)
+                # Se selecionado, renderiza verde (primary) / Se disponível renderiza escuro (secondary)
                 if num in st.session_state.carrinho:
-                    cols[j].button(f"✓ {num}", key=f"btn_{num}", type="primary", use_container_width=True, on_click=toggle_numero, args=(num,))
+                    cols[j].button(f"{num}", key=f"btn_{num}", type="primary", use_container_width=True, on_click=toggle_numero, args=(num,))
                 elif status == "Disponível":
                     cols[j].button(f"{num}", key=f"btn_{num}", type="secondary", use_container_width=True, on_click=toggle_numero, args=(num,))
                 elif status == "Reservado":
-                    cols[j].markdown(f"<div class='box-res'>{num}<br>Res.</div>", unsafe_allow_html=True)
+                    cols[j].markdown(f"<div class='caixa-status box-res'>{num}<br>Res.</div>", unsafe_allow_html=True)
                 else:
-                    cols[j].markdown(f"<div class='box-pago'>{num}<br>Pago</div>", unsafe_allow_html=True)
+                    cols[j].markdown(f"<div class='caixa-status box-pago'>{num}<br>Pago</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -250,7 +266,7 @@ with aba_comprar:
         st.info(f"**Total a pagar: R$ {dados['valor_total']:.2f}** pelos números: {dados['numeros_str']}")
         
         st.write(f"**Favorecido:** {NOME_PIX}")
-        st.write("**Copie a Chave PIX (E-mail) abaixo:**")
+        st.write("**Copie a Chave PIX abaixo:**")
         st.code(CHAVE_PIX, language="text")
         
         msg = f"Olá! Me chamo {dados['nome']}. Reservei os números [{dados['numeros_str']}] na Rifa da Equipe Zeus. Segue o comprovante do PIX no valor de R$ {dados['valor_total']:.2f}:"
@@ -303,40 +319,26 @@ with aba_comprar:
 # --- CONTEÚDO DA ABA 2: VER PRÊMIOS ---
 with aba_premios:
     st.header("🎁 Conheça os nossos Prêmios!")
-    st.write("Ao participar na nossa rifa, além de ajudares o projeto, concorres a estes super prêmios:")
     
     col_p1, col_p2, col_p3 = st.columns(3)
     
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
-        if os.path.exists("premio1.jpeg"):
-            st.image("premio1.jpeg", use_container_width=True)
-        else:
-            st.info("Imagem da TV em breve!")
             
     with col_p2:
         st.subheader("🥈 2º LUGAR")
         st.markdown("**Airfryer + Kit Parafusadeira**")
-        if os.path.exists("premio2.jpeg"):
-            st.image("premio2.jpeg", use_container_width=True)
-        else:
-            st.info("Imagem da Airfryer em breve!")
             
     with col_p3:
         st.subheader("🥉 3º LUGAR")
         st.markdown("**Cesta de Queijos**")
-        if os.path.exists("premio3.jpeg"):
-            st.image("premio3.jpeg", use_container_width=True)
-        else:
-            st.info("Imagem da Cesta em breve!")
 
 # --- PAINEL DO ADMINISTRADOR ---
 st.markdown("---")
 with st.expander("🔐 Área do Administrador"):
     senha_admin = st.text_input("Senha Admin", type="password")
     if senha_admin == "zeus0709":
-        st.write("Gerenciar status dos números:")
         num_admin = st.number_input("Digite o Número que deseja gerenciar:", min_value=1, max_value=TOTAL_NUMEROS, step=1)
         
         col_pago, col_cancela = st.columns(2)
@@ -344,8 +346,8 @@ with st.expander("🔐 Área do Administrador"):
             if st.button("✅ Marcar como Pago", type="primary", use_container_width=True):
                 st.session_state.numeros_status[num_admin] = "Pago"
                 salvar_dados()
-                st.success(f"Sucesso! Número {num_admin} confirmado como PAGO.")
-                time.sleep(1.5)
+                st.success(f"Sucesso! Número {num_admin} PAGO.")
+                time.sleep(1)
                 st.rerun()
                 
         with col_cancela:
@@ -354,6 +356,6 @@ with st.expander("🔐 Área do Administrador"):
                 if num_admin in st.session_state.compradores:
                     del st.session_state.compradores[num_admin]
                 salvar_dados()
-                st.success(f"Reserva cancelada! Número {num_admin} liberado para venda novamente.")
-                time.sleep(1.5)
+                st.success(f"Reserva cancelada! Número {num_admin} liberado.")
+                time.sleep(1)
                 st.rerun()
