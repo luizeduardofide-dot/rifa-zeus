@@ -13,19 +13,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO (TRAVAMENTO DE TELA, GRADE E BOTÕES DARK) ---
+# --- DESIGN CUSTOMIZADO (FLEXBOX MATEMÁTICO) ---
 st.markdown("""
     <style>
     /* Força o fundo escuro em tudo */
     .stApp { background-color: #0b0c10; color: #ffffff; }
     
-    img { border-radius: 15px; }
-
-    /* --- TRAVA A ROLAGEM HORIZONTAL DA TELA --- */
-    html, body, [data-testid="stAppViewContainer"] {
+    /* BLOQUEIO TOTAL DE ROLAGEM HORIZONTAL */
+    html, body, [data-testid="stAppViewContainer"], .main {
         overflow-x: hidden !important;
         max-width: 100vw !important;
     }
+    
+    img { border-radius: 15px; }
     
     /* --- CORREÇÃO DO LOGO NO CELULAR --- */
     @media (max-width: 768px) {
@@ -44,25 +44,7 @@ st.markdown("""
     .promo-valor { font-size: 1.3em; font-weight: 900; color: #28a745; }
     .promo-tag { font-size: 0.7em; color: #0b0c10; background-color:#ffcc00; padding: 3px 8px; border-radius: 15px; font-weight: bold; margin-top: 8px; display: inline-block;}
     
-    /* --- MAGIA CSS: GRADE DE 5 COLUNAS PERFEITA (SÓ NOS NÚMEROS) --- */
-    
-    /* Identifica automaticamente linhas com 5 colunas e cria uma grade fluida que não vaza a tela */
-    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5)) {
-        display: grid !important;
-        grid-template-columns: repeat(5, 1fr) !important;
-        gap: 6px !important;
-        margin-bottom: 6px !important;
-        width: 100% !important;
-    }
-    
-    /* Remove preenchimentos extras nas colunas da grade para caberem perfeitamente */
-    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5)) > div[data-testid="column"] {
-        width: 100% !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* 2. Botão escuro (Disponível) - Substitui o branco padrão */
+    /* --- ESTILO BASE DOS BOTÕES (DARK) --- */
     button[kind="secondary"] {
         background-color: #1f2833 !important;
         border: 1px solid #45a29e !important;
@@ -74,15 +56,9 @@ st.markdown("""
         padding: 0 !important;
         transition: 0.2s;
     }
-    button[kind="secondary"]:hover {
-        background-color: #45a29e !important;
-        border-color: #ffffff !important;
-    }
-    button[kind="secondary"]:active {
-        background-color: #28a745 !important;
-    }
+    button[kind="secondary"]:hover { background-color: #45a29e !important; border-color: #ffffff !important; }
+    button[kind="secondary"]:active { background-color: #28a745 !important; }
 
-    /* 3. Botão selecionado/carrinho (Verde destacado) */
     button[kind="primary"] {
         background-color: #28a745 !important;
         border: 2px solid #ffffff !important;
@@ -95,21 +71,49 @@ st.markdown("""
         padding: 0 !important;
     }
 
-    /* 4. Caixas de Reservado e Pago (Mesmo tamanho dos botões) */
     .caixa-status {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 48px;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 0.85em;
-        line-height: 1.2;
-        width: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        height: 48px; border-radius: 8px; font-weight: bold; font-size: 0.85em; line-height: 1.2; width: 100%;
     }
     .box-res { background-color: #ffc107; color: #000000; border: 1px solid #d39e00; }
     .box-pago { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
+
+    /* --- MAGIA CSS: FLEXBOX MATEMÁTICO PARA A GRADE DE NÚMEROS --- */
+    
+    /* 1. Força as linhas de 5 colunas a ficarem lado a lado (Row) sempre! */
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+        margin-bottom: 6px !important;
+        width: 100% !important;
+    }
+    
+    /* 2. Calcula a largura das colunas: 20% menos os espaços */
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) > div[data-testid="column"] {
+        width: calc(20% - 4.8px) !important;
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* 3. Ajuste fino EXCLUSIVO para celulares (Para não vazar a tela) */
+    @media (max-width: 768px) {
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) {
+            gap: 4px !important; /* Espaço menor no celular */
+            margin-bottom: 4px !important;
+        }
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) > div[data-testid="column"] {
+            width: calc(20% - 3.2px) !important; /* Conta matemática exata para dar 100% */
+        }
+        
+        /* Ajusta o tamanho da fonte e botão para caber bonitinho no mobile */
+        button[kind="secondary"], button[kind="primary"], .caixa-status {
+            height: 42px !important;
+            font-size: 14px !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
