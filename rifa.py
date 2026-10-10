@@ -37,7 +37,7 @@ st.markdown("""
         padding-left: 10px !important;
         padding-right: 10px !important;
         padding-top: 3.5rem !important; /* Espaço para o cabeçalho não cortar na nuvem */
-        padding-bottom: 5rem !important; /* Espaço extra para a faixa flutuante não cobrir o final */
+        padding-bottom: 6rem !important; /* Espaço extra para a faixa flutuante não cobrir o final */
         max-width: 100% !important;
     }
 
@@ -52,7 +52,7 @@ st.markdown("""
         }
     }
     
-    /* --- FAIXA FLUTUANTE FIXA NA TELA (STICKY BANNER) --- */
+    /* --- FAIXA FLUTUANTE FIXA NA TELA (MAIOR E MAIS VISÍVEL) --- */
     .banner-flutuante {
         position: fixed;
         bottom: 20px;
@@ -60,13 +60,13 @@ st.markdown("""
         transform: translateX(-50%);
         background: linear-gradient(135deg, #ffcc00, #ff9900);
         color: #000000;
-        padding: 10px 18px;
-        border-radius: 25px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+        padding: 14px 20px;
+        border-radius: 20px;
+        box-shadow: 0 6px 25px rgba(0, 0, 0, 0.85);
         z-index: 999999;
         text-align: center;
-        width: 90%;
-        max-width: 450px;
+        width: 92%;
+        max-width: 520px;
         border: 2px solid #ffffff;
         font-weight: bold;
     }
@@ -315,8 +315,8 @@ with aba_comprar:
         qtd_c = len(st.session_state.carrinho)
         st.markdown(f"""
             <div class="banner-flutuante">
-                🛒 <b>{qtd_c} número(s) selecionado(s)!</b><br>
-                <span style="font-size: 0.85em; font-weight: normal;">Role até o final da página para informar seu Nome e pagar.</span>
+                <div style="font-size: 1.15em; margin-bottom: 2px;">🛒 <b>{qtd_c} número(s) selecionado(s)!</b></div>
+                <div style="font-size: 0.95em; font-weight: 600;">👇 Role até o final da página para informar seu Nome e pagar.</div>
             </div>
         """, unsafe_allow_html=True)
 
