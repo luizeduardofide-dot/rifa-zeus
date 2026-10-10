@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO (COMPATIBILIDADE MOBILE STREAMLIT) ---
+# --- DESIGN CUSTOMIZADO ---
 st.markdown("""
     <style>
     /* Força o fundo escuro geral */
@@ -29,8 +29,8 @@ st.markdown("""
     }
     
     [data-testid="stMainBlockContainer"], .block-container {
-        padding-left: 8px !important;
-        padding-right: 8px !important;
+        padding-left: 10px !important;
+        padding-right: 10px !important;
         padding-top: 1rem !important;
         max-width: 100% !important;
     }
@@ -40,18 +40,18 @@ st.markdown("""
     /* --- CORREÇÃO DO LOGO NO MOBILE --- */
     @media (max-width: 768px) {
         div[data-testid="stColumn"]:first-child img {
-            max-width: 80px !important;
+            max-width: 85px !important;
             margin: 0 auto;
             display: block;
         }
     }
     
     /* --- PROMOÇÕES --- */
-    .promo-container { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; justify-content: center; }
-    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 12px; text-align: center; flex: 1 1 100px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
+    .promo-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
+    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 12px; text-align: center; flex: 1 1 110px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
     .promo-card.destaque { border: 2px solid #ffcc00; box-shadow: 0 0 12px rgba(255, 204, 0, 0.4); transform: scale(1.03); }
     .promo-qtd { font-size: 1em; font-weight: bold; color: #ffffff; margin-bottom: 4px;}
-    .promo-valor { font-size: 1.2em; font-weight: 900; color: #28a745; }
+    .promo-valor { font-size: 1.25em; font-weight: 900; color: #28a745; }
     .promo-tag { font-size: 0.65em; color: #0b0c10; background-color:#ffcc00; padding: 2px 6px; border-radius: 12px; font-weight: bold; margin-top: 6px; display: inline-block;}
     
     /* --- ESTILO DOS BOTÕES DA GRADE (DARK) --- */
@@ -88,25 +88,12 @@ st.markdown("""
     .box-pago { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
 
     /* ========================================================= */
-    /* FORÇAR 5 COLUNAS LADO A LADO EM QUALQUER CELULAR          */
+    /* FORÇAR 5 COLUNAS APENAS NA GRADE DE NÚMEROS NO MOBILE     */
     /* ========================================================= */
     @media (max-width: 768px) {
-        /* Container das linhas: impede empilhamento vertical */
-        div[data-testid="stHorizontalBlock"],
-        div[data-testid="horizontalBlock"],
-        div[class*="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            gap: 3px !important;
-            margin-bottom: 3px !important;
-            width: 100% !important;
-        }
-
-        /* Cada coluna divide o espaço exatamente igual (20% cada) */
-        div[data-testid="stColumn"],
-        div[data-testid="column"],
-        div[class*="stColumn"] {
+        /* Aplica o estilo de 5 colunas somente para as linhas da cartela de números */
+        div[data-testid="stColumn"]:first-child:nth-last-child(5),
+        div[data-testid="stColumn"]:first-child:nth-last-child(5) ~ div[data-testid="stColumn"] {
             width: 0 !important;
             min-width: 0 !important;
             flex: 1 1 0% !important;
@@ -114,9 +101,13 @@ st.markdown("""
             margin: 0 !important;
         }
 
-        /* Garante que os seletores internos do Streamlit acompanhem o tamanho */
-        div[data-testid="stElementContainer"],
-        div[data-testid="stButton"] {
+        /* Garante alinhamento das linhas da grade de números */
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(5)) {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            gap: 3px !important;
+            margin-bottom: 3px !important;
             width: 100% !important;
         }
 
@@ -197,7 +188,7 @@ with col_logo:
         st.image("fotologo.jpeg", use_container_width=True)
 
 with col_titulo:
-    st.markdown("<h1 style='margin-top: -15px;'>Rifa - Equipe Zeus</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='margin: 0; padding: 0;'>Rifa - Equipe Zeus</h1>", unsafe_allow_html=True)
     st.markdown("Acelerando sonhos com o Fórmula SAE UFLA!")
 
 st.markdown("---")
@@ -221,6 +212,19 @@ st.markdown(f"### 🔥 Já vendemos **{numeros_indisponiveis}** de **{TOTAL_NUME
 st.progress(porcentagem_vendida)
 st.markdown("---")
 
+# --- PROJETO E PRÊMIOS (RESUMO) ---
+col_proj, col_premio = st.columns(2)
+
+with col_proj:
+    st.subheader("🏁 O Projeto")
+    st.write("Nós projetamos e construímos um carro de corrida do zero para competir! Sua contribuição é o combustível para cobrir os custos de manufatura e colocar o nosso projeto na pista.")
+
+with col_premio:
+    st.subheader("🏆 Sorteio: 18/12")
+    st.write("Confira as fotos detalhadas dos prêmios na aba **'Ver Prêmios'** logo abaixo!")
+
+st.write("") 
+
 # --- SISTEMA DE ABAS (TABS) ---
 aba_comprar, aba_premios = st.tabs(["🎟️ Comprar Números", "🏆 Ver Prêmios"])
 
@@ -234,6 +238,10 @@ with aba_comprar:
         <div class="promo-card">
             <div class="promo-qtd">🎟️ 1 Número</div>
             <div class="promo-valor">R$ 3,00</div>
+        </div>
+        <div class="promo-card">
+            <div class="promo-qtd">🎟️ 3 Números</div>
+            <div class="promo-valor">R$ 9,00</div>
         </div>
         <div class="promo-card destaque">
             <div class="promo-qtd">🔥 4 Números</div>
@@ -336,20 +344,33 @@ with aba_comprar:
 # --- CONTEÚDO DA ABA 2: VER PRÊMIOS ---
 with aba_premios:
     st.header("🎁 Conheça os nossos Prêmios!")
+    st.write("Ao participar na nossa rifa, além de ajudar o projeto, você concorre a estes super prêmios:")
     
     col_p1, col_p2, col_p3 = st.columns(3)
     
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
+        if os.path.exists("premio1.jpeg"):
+            st.image("premio1.jpeg", use_container_width=True)
+        else:
+            st.info("Imagem da TV em breve!")
             
     with col_p2:
         st.subheader("🥈 2º LUGAR")
         st.markdown("**Airfryer + Kit Parafusadeira**")
+        if os.path.exists("premio2.jpeg"):
+            st.image("premio2.jpeg", use_container_width=True)
+        else:
+            st.info("Imagem da Airfryer em breve!")
             
     with col_p3:
         st.subheader("🥉 3º LUGAR")
         st.markdown("**Cesta de Queijos**")
+        if os.path.exists("premio3.jpeg"):
+            st.image("premio3.jpeg", use_container_width=True)
+        else:
+            st.info("Imagem da Cesta em breve!")
 
 # --- PAINEL DO ADMINISTRADOR ---
 st.markdown("---")
