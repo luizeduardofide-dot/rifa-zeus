@@ -4,7 +4,7 @@ import json
 import os
 import time
 import requests
-from PIL import Image
+from PIL import Image, ImageOps
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -125,8 +125,15 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
+# --- FUNÇÃO PARA PADRONIZAR IMAGENS EM TAMANHO QUADRADO (1:1) ---
+def carregar_imagem_padronizada(caminho, tamanho=(600, 600)):
+    if os.path.exists(caminho):
+        img = Image.open(caminho)
+        return ImageOps.fit(img, tamanho, method=Image.Resampling.LANCZOS)
+    return None
+
 # --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN (OTIMIZADO COM CACHE DE 60 SEGUNDOS) ---
-@st.cache_data(ttl=60)  # Evita chamadas repetidas à API a cada clique (economiza ~98% das requisições)
+@st.cache_data(ttl=60)
 def carregar_dados():
     url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}/latest"
     headers = {"X-Master-Key": JSONBIN_API_KEY}
@@ -138,7 +145,6 @@ def carregar_dados():
             numeros = {int(k): v for k, v in record.get("numeros_status", {}).items()}
             compradores = {int(k): v for k, v in record.get("compradores", {}).items()}
             
-            # Garante que todos os 350 números existam no dicionário
             for i in range(1, TOTAL_NUMEROS + 1):
                 if i not in numeros:
                     numeros[i] = "Disponível"
@@ -160,7 +166,7 @@ def salvar_dados(numeros_status, compradores):
     }
     try:
         requests.put(url, headers=headers, json=payload, timeout=5)
-        st.cache_data.clear()  # Limpa o cache para garantir leitura imediata da nova gravação
+        st.cache_data.clear()
     except Exception as e:
         st.error(f"Erro ao salvar dados na nuvem: {e}")
 
@@ -241,6 +247,7 @@ with col_proj:
 with col_premio:
     st.subheader("🏆 Sorteio: 18/12")
     st.write("Confira as fotos detalhadas dos prêmios na aba **'Ver Prêmios'** logo abaixo!")
+    st.markdown("📸 **Siga no Instagram:** [@zeusufla](https://instagram.com/zeusufla)")
 
 st.write("") 
 
@@ -339,7 +346,6 @@ with aba_comprar:
             if not nome_comprador or not tel_comprador:
                 st.error("Por favor, preencha seu nome e WhatsApp para continuar.")
             else:
-                # Checa em tempo real se os números ainda estão livres antes de gravar
                 numeros_atualizados, compradores_atualizados = carregar_dados()
                 conflito = [n for n in st.session_state.carrinho if numeros_atualizados.get(n) != "Disponível"]
                 
@@ -352,7 +358,6 @@ with aba_comprar:
                         numeros_atualizados[n] = "Reservado"
                         compradores_atualizados[n] = f"{nome_comprador} ({tel_comprador})"
                     
-                    # Salva no JSONBin
                     salvar_dados(numeros_atualizados, compradores_atualizados)
                     
                     st.session_state.numeros_status = numeros_atualizados
@@ -376,24 +381,27 @@ with aba_premios:
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
-        if os.path.exists("premio1.jpeg"):
-            st.image("premio1.jpeg", use_container_width=True)
+        img1 = carregar_imagem_padronizada("premio1.jpeg")
+        if img1:
+            st.image(img1, use_container_width=True)
         else:
             st.info("Imagem da TV em breve!")
             
     with col_p2:
         st.subheader("🥈 2º LUGAR")
         st.markdown("**Airfryer + Kit Parafusadeira**")
-        if os.path.exists("premio2.jpeg"):
-            st.image("premio2.jpeg", use_container_width=True)
+        img2 = carregar_imagem_padronizada("premio2.jpeg")
+        if img2:
+            st.image(img2, use_container_width=True)
         else:
             st.info("Imagem da Airfryer em breve!")
             
     with col_p3:
         st.subheader("🥉 3º LUGAR")
         st.markdown("**Cesta de Queijos**")
-        if os.path.exists("premio3.jpeg"):
-            st.image("premio3.jpeg", use_container_width=True)
+        img3 = carregar_imagem_padronizada("premio3.jpeg")
+        if img3:
+            st.image(img3, use_container_width=True)
         else:
             st.info("Imagem da Cesta em breve!")
 
