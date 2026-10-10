@@ -3,6 +3,7 @@ import urllib.parse
 import json
 import os
 import time
+import requests
 from PIL import Image
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
@@ -13,7 +14,11 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO ---
+# --- CHAVES DO JSONBIN (CONFIGURADAS) ---
+JSONBIN_BIN_ID = st.secrets.get("JSONBIN_BIN_ID", "6ac9e66eac6210605a24aca3")
+JSONBIN_API_KEY = st.secrets.get("JSONBIN_API_KEY", "$2a$10$JDZzWPNr4Ih2SxcZmtLkIOJjdLf068P7pNndXwwyTV9ooHEvd6PgK")
+
+# --- DESIGN CUSTOMIZADO (RESPONSIVO E ESCURO) ---
 st.markdown("""
     <style>
     /* Força o fundo escuro geral */
@@ -22,7 +27,7 @@ st.markdown("""
         color: #ffffff; 
     }
     
-    /* BLOQUEIO DE ROLAGEM HORIZONTAL E AJUSTE DO TOPO PARA A BARRA DO STREAMLIT CLOUD */
+    /* BLOQUEIO DE ROLAGEM HORIZONTAL E ESPAÇO PARA O HEADER DO STREAMLIT CLOUD */
     html, body, [data-testid="stAppViewContainer"], .main {
         overflow-x: hidden !important;
         max-width: 100vw !important;
@@ -31,7 +36,7 @@ st.markdown("""
     [data-testid="stMainBlockContainer"], .block-container {
         padding-left: 10px !important;
         padding-right: 10px !important;
-        padding-top: 3.5rem !important; /* Espaço suficiente para não cortar o título na nuvem */
+        padding-top: 3.5rem !important; /* Espaço para o cabeçalho não cortar na nuvem */
         max-width: 100% !important;
     }
 
@@ -87,9 +92,7 @@ st.markdown("""
     .box-res { background-color: #ffc107; color: #000000; border: 1px solid #d39e00; }
     .box-pago { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
 
-    /* ========================================================= */
-    /* FORÇAR 5 COLUNAS APENAS NA GRADE DE NÚMEROS NO MOBILE     */
-    /* ========================================================= */
+    /* --- FORÇAR 5 COLUNAS APENAS NA GRADE DE NÚMEROS NO MOBILE --- */
     @media (max-width: 768px) {
         div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(5)) {
             display: flex !important;
@@ -121,26 +124,43 @@ TOTAL_NUMEROS = 350
 CHAVE_PIX = "rifaequipezeus@gmail.com"  
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
-ARQUIVO_BANCO = "banco_rifa.json" 
 
-# --- SISTEMA DE SALVAMENTO ---
+# --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN ---
 def carregar_dados():
-    if os.path.exists(ARQUIVO_BANCO):
-        with open(ARQUIVO_BANCO, "r", encoding="utf-8") as f:
-            dados = json.load(f)
-            numeros = {int(k): v for k, v in dados.get("numeros_status", {}).items()}
-            compradores = {int(k): v for k, v in dados.get("compradores", {}).items()}
+    url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}/latest"
+    headers = {"X-Master-Key": JSONBIN_API_KEY}
+    
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 200:
+            record = response.json().get("record", {})
+            numeros = {int(k): v for k, v in record.get("numeros_status", {}).items()}
+            compradores = {int(k): v for k, v in record.get("compradores", {}).items()}
+            
+            # Garante que todos os 350 números existam no dicionário
+            for i in range(1, TOTAL_NUMEROS + 1):
+                if i not in numeros:
+                    numeros[i] = "Disponível"
             return numeros, compradores
-    else:
-        return {i: "Disponível" for i in range(1, TOTAL_NUMEROS + 1)}, {}
+    except Exception as e:
+        st.error(f"Erro ao carregar dados do banco na nuvem: {e}")
 
-def salvar_dados():
-    dados = {
-        "numeros_status": st.session_state.numeros_status,
-        "compradores": st.session_state.compradores
+    return {i: "Disponível" for i in range(1, TOTAL_NUMEROS + 1)}, {}
+
+def salvar_dados(numeros_status, compradores):
+    url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}"
+    headers = {
+        "Content-Type": "application/json",
+        "X-Master-Key": JSONBIN_API_KEY
     }
-    with open(ARQUIVO_BANCO, "w", encoding="utf-8") as f:
-        json.dump(dados, f, ensure_ascii=False, indent=4)
+    payload = {
+        "numeros_status": {str(k): v for k, v in numeros_status.items()},
+        "compradores": {str(k): v for k, v in compradores.items()}
+    }
+    try:
+        requests.put(url, headers=headers, json=payload, timeout=5)
+    except Exception as e:
+        st.error(f"Erro ao salvar dados na nuvem: {e}")
 
 # --- INICIALIZAÇÃO DE VARIÁVEIS ---
 numeros_salvos, compradores_salvos = carregar_dados()
@@ -317,18 +337,24 @@ with aba_comprar:
             if not nome_comprador or not tel_comprador:
                 st.error("Por favor, preencha seu nome e WhatsApp para continuar.")
             else:
-                numeros_atualizados, _ = carregar_dados()
-                conflito = [n for n in st.session_state.carrinho if numeros_atualizados[n] != "Disponível"]
+                # Checa em tempo real se os números ainda estão livres antes de gravar
+                numeros_atualizados, compradores_atualizados = carregar_dados()
+                conflito = [n for n in st.session_state.carrinho if numeros_atualizados.get(n) != "Disponível"]
                 
                 if conflito:
                     st.error(f"⚠️ Eita! Alguém foi mais rápido e acabou de reservar os números: {conflito}. Por favor, desmarque eles e escolha outros!")
                     st.session_state.numeros_status = numeros_atualizados
+                    st.session_state.compradores = compradores_atualizados
                 else:
                     for n in st.session_state.carrinho:
-                        st.session_state.numeros_status[n] = "Reservado"
-                        st.session_state.compradores[n] = nome_comprador
+                        numeros_atualizados[n] = "Reservado"
+                        compradores_atualizados[n] = f"{nome_comprador} ({tel_comprador})"
                     
-                    salvar_dados()
+                    # Salva no JSONBin
+                    salvar_dados(numeros_atualizados, compradores_atualizados)
+                    
+                    st.session_state.numeros_status = numeros_atualizados
+                    st.session_state.compradores = compradores_atualizados
                     
                     st.session_state.dados_reserva = {
                         "nome": nome_comprador, "telefone": tel_comprador,
@@ -379,18 +405,27 @@ with st.expander("🔐 Área do Administrador"):
         col_pago, col_cancela = st.columns(2)
         with col_pago:
             if st.button("✅ Marcar como Pago", type="primary", use_container_width=True):
-                st.session_state.numeros_status[num_admin] = "Pago"
-                salvar_dados()
-                st.success(f"Sucesso! Número {num_admin} PAGO.")
+                numeros_atualizados, compradores_atualizados = carregar_dados()
+                numeros_atualizados[num_admin] = "Pago"
+                salvar_dados(numeros_atualizados, compradores_atualizados)
+                
+                st.session_state.numeros_status = numeros_atualizados
+                st.session_state.compradores = compradores_atualizados
+                st.success(f"Sucesso! Número {num_admin} confirmado como PAGO.")
                 time.sleep(1)
                 st.rerun()
                 
         with col_cancela:
             if st.button("❌ Cancelar Reserva", use_container_width=True):
-                st.session_state.numeros_status[num_admin] = "Disponível"
-                if num_admin in st.session_state.compradores:
-                    del st.session_state.compradores[num_admin]
-                salvar_dados()
+                numeros_atualizados, compradores_atualizados = carregar_dados()
+                numeros_atualizados[num_admin] = "Disponível"
+                if num_admin in compradores_atualizados:
+                    del compradores_atualizados[num_admin]
+                
+                salvar_dados(numeros_atualizados, compradores_atualizados)
+                
+                st.session_state.numeros_status = numeros_atualizados
+                st.session_state.compradores = compradores_atualizados
                 st.success(f"Reserva cancelada! Número {num_admin} liberado.")
                 time.sleep(1)
                 st.rerun()
