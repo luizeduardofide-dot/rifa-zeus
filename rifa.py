@@ -4,7 +4,7 @@ import json
 import os
 import time
 import requests
-from PIL import Image, ImageOps
+from PIL import Image
 
 # --- CONFIGURAÇÃO DA PÁGINA ---
 st.set_page_config(
@@ -136,14 +136,10 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS SEM CORTAR AS BORDAS (PADDING INTELIGENTE) ---
-def carregar_imagem_padronizada(caminho, tamanho=(600, 600)):
+# --- FUNÇÃO DE CARREGAMENTO NATURAL DAS IMAGENS ---
+def carregar_imagem(caminho):
     if os.path.exists(caminho):
-        img = Image.open(caminho).convert("RGB")
-        # Captura a cor do fundo original da imagem (canto superior esquerdo)
-        bg_color = img.getpixel((0, 0))
-        # Ajusta a imagem inteira dentro do quadrado de 600x600 sem cortar as bordas laterais
-        return ImageOps.pad(img, tamanho, color=bg_color, method=Image.Resampling.LANCZOS)
+        return Image.open(caminho)
     return None
 
 # --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN (OTIMIZADO COM CACHE DE 60 SEGUNDOS) ---
@@ -405,7 +401,7 @@ with aba_premios:
     with col_p1:
         st.subheader("🥇 1º LUGAR")
         st.markdown("**Televisão 43\"**")
-        img1 = carregar_imagem_padronizada("premio1.jpeg")
+        img1 = carregar_imagem("premio1.jpeg")
         if img1:
             st.image(img1, use_container_width=True)
         else:
@@ -414,7 +410,7 @@ with aba_premios:
     with col_p2:
         st.subheader("🥈 2º LUGAR")
         st.markdown("**Airfryer + Kit Parafusadeira**")
-        img2 = carregar_imagem_padronizada("premio2.jpeg")
+        img2 = carregar_imagem("premio2.jpeg")
         if img2:
             st.image(img2, use_container_width=True)
         else:
@@ -423,7 +419,7 @@ with aba_premios:
     with col_p3:
         st.subheader("🥉 3º LUGAR")
         st.markdown("**Cesta de Queijos**")
-        img3 = carregar_imagem_padronizada("premio3.jpeg")
+        img3 = carregar_imagem("premio3.jpeg")
         if img3:
             st.image(img3, use_container_width=True)
         else:
@@ -445,7 +441,7 @@ with st.expander("🔐 Área do Administrador"):
                 
                 st.session_state.numeros_status = numeros_atualizados
                 st.session_state.compradores = compradores_atualizados
-                st.success(f"Sucesso! Número {num_admin} confirmed como PAGO.")
+                st.success(f"Sucesso! Número {num_admin} confirmado como PAGO.")
                 time.sleep(1)
                 st.rerun()
                 
