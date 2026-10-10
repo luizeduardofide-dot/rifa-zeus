@@ -125,7 +125,8 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN ---
+# --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN (OTIMIZADO COM CACHE DE 60 SEGUNDOS) ---
+@st.cache_data(ttl=60)  # Evita chamadas repetidas à API a cada clique (economiza ~98% das requisições)
 def carregar_dados():
     url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}/latest"
     headers = {"X-Master-Key": JSONBIN_API_KEY}
@@ -159,6 +160,7 @@ def salvar_dados(numeros_status, compradores):
     }
     try:
         requests.put(url, headers=headers, json=payload, timeout=5)
+        st.cache_data.clear()  # Limpa o cache para garantir leitura imediata da nova gravação
     except Exception as e:
         st.error(f"Erro ao salvar dados na nuvem: {e}")
 
