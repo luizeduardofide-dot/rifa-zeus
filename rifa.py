@@ -13,13 +13,19 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO (TRAVAMENTO DE GRADE E BOTÕES DARK) ---
+# --- DESIGN CUSTOMIZADO (TRAVAMENTO DE TELA, GRADE E BOTÕES DARK) ---
 st.markdown("""
     <style>
     /* Força o fundo escuro em tudo */
     .stApp { background-color: #0b0c10; color: #ffffff; }
     
     img { border-radius: 15px; }
+
+    /* --- TRAVA A ROLAGEM HORIZONTAL DA TELA --- */
+    html, body, [data-testid="stAppViewContainer"] {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
     
     /* --- CORREÇÃO DO LOGO NO CELULAR --- */
     @media (max-width: 768px) {
@@ -38,27 +44,25 @@ st.markdown("""
     .promo-valor { font-size: 1.3em; font-weight: 900; color: #28a745; }
     .promo-tag { font-size: 0.7em; color: #0b0c10; background-color:#ffcc00; padding: 3px 8px; border-radius: 15px; font-weight: bold; margin-top: 8px; display: inline-block;}
     
-    /* --- MAGIA CSS: GRADE PERFEITA NO CELULAR E BOTÕES ESCUROS --- */
+    /* --- MAGIA CSS: GRADE DE 5 COLUNAS PERFEITA (SÓ NOS NÚMEROS) --- */
     
-    /* 1. Trava as linhas para NÃO empilhar no celular */
-    div[data-testid="stHorizontalBlock"] {
+    /* Identifica automaticamente linhas com 5 colunas e cria uma grade fluida que não vaza a tela */
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5)) {
+        display: grid !important;
+        grid-template-columns: repeat(5, 1fr) !important;
         gap: 6px !important;
         margin-bottom: 6px !important;
-        flex-wrap: nowrap !important;
+        width: 100% !important;
     }
     
-    @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"] {
-            flex-direction: row !important; /* Força ficar lado a lado */
-        }
-        div[data-testid="column"] {
-            width: 20% !important; /* Garante 5 por linha */
-            min-width: 0 !important;
-            padding: 0 !important;
-        }
+    /* Remove preenchimentos extras nas colunas da grade para caberem perfeitamente */
+    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5)) > div[data-testid="column"] {
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
     }
 
-    /* 2. Remove a "caixinha branca" e deixa o botão escuro (Disponível) */
+    /* 2. Botão escuro (Disponível) - Substitui o branco padrão */
     button[kind="secondary"] {
         background-color: #1f2833 !important;
         border: 1px solid #45a29e !important;
@@ -78,7 +82,7 @@ st.markdown("""
         background-color: #28a745 !important;
     }
 
-    /* 3. Estilo do botão quando clicado/carrinho (Selecionado) */
+    /* 3. Botão selecionado/carrinho (Verde destacado) */
     button[kind="primary"] {
         background-color: #28a745 !important;
         border: 2px solid #ffffff !important;
@@ -233,11 +237,11 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS (AGORA RESPONSIVA E ESCURA) ---
+    # --- SELEÇÃO DE NÚMEROS ---
     st.subheader("👇 Clique nos quadradinhos para selecionar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    # Layout nativo travado com CSS para ficar em Grid (5 por linha)
+    # Laço para criar 5 colunas por linha
     cols_por_linha = 5
     for i in range(0, TOTAL_NUMEROS, cols_por_linha):
         cols = st.columns(cols_por_linha)
