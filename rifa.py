@@ -36,8 +36,8 @@ st.markdown("""
     [data-testid="stMainBlockContainer"], .block-container {
         padding-left: 10px !important;
         padding-right: 10px !important;
-        padding-top: 3.5rem !important; /* Espaço para o cabeçalho não cortar na nuvem */
-        padding-bottom: 6rem !important; /* Espaço extra para a faixa flutuante não cobrir o final */
+        padding-top: 3.5rem !important;
+        padding-bottom: 6rem !important;
         max-width: 100% !important;
     }
 
@@ -136,11 +136,14 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS EM TAMANHO QUADRADO (1:1) ---
+# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS SEM CORTAR AS BORDAS (PADDING INTELIGENTE) ---
 def carregar_imagem_padronizada(caminho, tamanho=(600, 600)):
     if os.path.exists(caminho):
-        img = Image.open(caminho)
-        return ImageOps.fit(img, tamanho, method=Image.Resampling.LANCZOS)
+        img = Image.open(caminho).convert("RGB")
+        # Captura a cor do fundo original da imagem (canto superior esquerdo)
+        bg_color = img.getpixel((0, 0))
+        # Ajusta a imagem inteira dentro do quadrado de 600x600 sem cortar as bordas laterais
+        return ImageOps.pad(img, tamanho, color=bg_color, method=Image.Resampling.LANCZOS)
     return None
 
 # --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN (OTIMIZADO COM CACHE DE 60 SEGUNDOS) ---
@@ -221,7 +224,6 @@ col_logo, col_titulo = st.columns([1, 3], vertical_alignment="center")
 
 with col_logo:
     if os.path.exists("fotologo.jpeg"):
-        # Largura controlada diretamente no Python (sem mexer nas fotos dos prêmios)
         st.image("fotologo.jpeg", width=90)
 
 with col_titulo:
@@ -443,7 +445,7 @@ with st.expander("🔐 Área do Administrador"):
                 
                 st.session_state.numeros_status = numeros_atualizados
                 st.session_state.compradores = compradores_atualizados
-                st.success(f"Sucesso! Número {num_admin} confirmado como PAGO.")
+                st.success(f"Sucesso! Número {num_admin} confirmed como PAGO.")
                 time.sleep(1)
                 st.rerun()
                 
