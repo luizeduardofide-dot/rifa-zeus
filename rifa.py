@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS) ---
+# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & CORREÇÃO MOBILE) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0c10; color: #ffffff; }
@@ -27,7 +27,7 @@ st.markdown("""
     
     /* --- ESTILOS PARA AS PROMOÇÕES --- */
     .promo-container { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; }
-    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 15px; text-align: center; flex: 0 1 150px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
+    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 15px; text-align: center; flex: 1 1 120px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
     .promo-card.destaque { border: 2px solid #ffcc00; box-shadow: 0 0 15px rgba(255, 204, 0, 0.4); transform: scale(1.05); }
     .promo-qtd { font-size: 1.1em; font-weight: bold; color: #ffffff; margin-bottom: 8px;}
     .promo-valor { font-size: 1.4em; font-weight: 900; color: #28a745; }
@@ -35,6 +35,22 @@ st.markdown("""
     
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
+
+    /* --- CORREÇÃO DA GRADE PARA CELULAR (SMARTPHONE FIX) --- */
+    @media (max-width: 768px) {
+        /* Desativa o empilhamento automático apenas para a grade de números */
+        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(5)) {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 0px !important;
+        }
+        /* Define que teremos 5 botões por linha no celular (20% de largura cada) */
+        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(5)) > div[data-testid="column"] {
+            width: calc(20% - 8px) !important;
+            min-width: calc(20% - 8px) !important;
+            flex: 0 0 calc(20% - 8px) !important;
+        }
+    }
     </style>
 """, unsafe_allow_html=True)
 
