@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & GRADE RESPONSIVA) ---
+# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & ESTÉTICA LIMPA MOBILE) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0c10; color: #ffffff; }
@@ -39,10 +39,6 @@ st.markdown("""
     
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
-
-    /* Caixas estilizadas e legíveis para números já ocupados */
-    .num-reservado-box { background-color: #ffc107 !important; color: #000000 !important; text-align: center; padding: 10px 0; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin: 2px 0; border: 1px solid #b38f00; }
-    .num-pago-box { background-color: #dc3545 !important; color: #ffffff !important; text-align: center; padding: 10px 0; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin: 2px 0; border: 1px solid #a71d2a; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -79,8 +75,6 @@ if "numeros_status" not in st.session_state:
     st.session_state.numeros_status = numeros_salvos
 if "compradores" not in st.session_state:
     st.session_state.compradores = compradores_salvos
-if "carrinho" not in st.session_state:
-    st.session_state.carrinho = []
 if "reserva_concluida" not in st.session_state:
     st.session_state.reserva_concluida = False
 if "dados_reserva" not in st.session_state:
@@ -151,7 +145,7 @@ aba_comprar, aba_premios = st.tabs(["🎟️ Comprar Números", "🏆 Ver Prêmi
 # --- CONTEÚDO DA ABA 1: COMPRAR NÚMEROS ---
 with aba_comprar:
     st.header("💰 Combos Promocionais")
-    st.write("Escolha seus números na grade abaixo. O sistema calcula o **melhor desconto automaticamente**!")
+    st.write("Aproveite os descontos progressivos comprando mais números!")
 
     st.markdown("""
     <div class="promo-container">
@@ -180,30 +174,18 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS COM BOTÕES NATIVOS MULTI-SELECIONÁVEIS ---
-    st.subheader("👇 Clique nos números que deseja comprar (podes selecionar vários):")
-    st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados no Carrinho** | 🟡 **Reservados** | 🔴 **Pagos**")
-
-    cols_por_linha = 10
-    for i in range(0, TOTAL_NUMEROS, cols_por_linha):
-        cols = st.columns(cols_por_linha)
-        for j in range(cols_por_linha):
-            num = i + j + 1
-            if num <= TOTAL_NUMEROS:
-                status = st.session_state.numeros_status[num]
-                
-                if num in st.session_state.carrinho:
-                    if cols[j].button(f"✓ {num}", key=f"btn_car_{num}", type="primary", use_container_width=True):
-                        st.session_state.carrinho.remove(num)
-                        st.rerun()
-                elif status == "Disponível":
-                    if cols[j].button(f"{num}", key=f"btn_disp_{num}", type="secondary", use_container_width=True):
-                        st.session_state.carrinho.append(num)
-                        st.rerun()
-                elif status == "Reservado":
-                    cols[j].markdown(f"<div class='num-reservado-box'>Nº {num}<br>Res.</div>", unsafe_allow_html=True)
-                else:
-                    cols[j].markdown(f"<div class='num-pago-box'>Nº {num}<br>Pago</div>", unsafe_allow_html=True)
+    st.markdown("---")
+    st.subheader("🎯 Escolha os seus números")
+    
+    # Filtra apenas os números que estão realmente disponíveis para seleção
+    numeros_disponiveis_lista = [num for num, status in st.session_state.numeros_status.items() if status == "Disponível"]
+    
+    # Seletor múltiplo limpo, fluido e responsivo para telemóvel e PC
+    numeros_escolhidos = st.multiselect(
+        "Selecione um ou mais números disponíveis (ou digite para procurar):",
+        options=numeros_disponiveis_lista,
+        format_func=lambda x: f"Número {x}"
+    )
 
     st.markdown("---")
 
@@ -228,12 +210,12 @@ with aba_comprar:
             st.session_state.dados_reserva = {}
             st.rerun()
 
-    elif len(st.session_state.carrinho) > 0:
-        qtd_selecionada = len(st.session_state.carrinho)
+    elif len(numeros_escolhidos) > 0:
+        qtd_selecionada = len(numeros_escolhidos)
         valor_final = calcular_total(qtd_selecionada)
         
         st.header("🛒 Fechar Pedido")
-        st.write(f"Você selecionou **{qtd_selecionada}** número(s): {sorted(st.session_state.carrinho)}")
+        st.write(f"Você selecionou **{qtd_selecionada}** número(s): {sorted(numeros_escolhidos)}")
         st.info(f"💰 **Valor Total com Desconto: R$ {valor_final:.2f}**")
         
         col_nome, col_tel = st.columns(2)
@@ -245,13 +227,13 @@ with aba_comprar:
                 st.error("Por favor, preencha seu nome e WhatsApp para continuar.")
             else:
                 numeros_atualizados, _ = carregar_dados()
-                conflito = [n for n in st.session_state.carrinho if numeros_atualizados[n] != "Disponível"]
+                conflito = [n for n in numeros_escolhidos if numeros_atualizados[n] != "Disponível"]
                 
                 if conflito:
-                    st.error(f"⚠️ Eita! Alguém foi mais rápido e acabou de reservar os números: {conflito}. Por favor, desmarque eles e escolha outros!")
+                    st.error(f"⚠️ Eita! Alguém foi mais rápido e acabou de reservar os números: {conflito}. Por favor, remova-os e escolha outros!")
                     st.session_state.numeros_status = numeros_atualizados
                 else:
-                    for n in st.session_state.carrinho:
+                    for n in numeros_escolhidos:
                         st.session_state.numeros_status[n] = "Reservado"
                         st.session_state.compradores[n] = nome_comprador
                     
@@ -259,11 +241,12 @@ with aba_comprar:
                     
                     st.session_state.dados_reserva = {
                         "nome": nome_comprador, "telefone": tel_comprador,
-                        "valor_total": valor_final, "numeros_str": ", ".join(map(str, sorted(st.session_state.carrinho)))
+                        "valor_total": valor_final, "numeros_str": ", ".join(map(str, sorted(numeros_escolhidos)))
                     }
-                    st.session_state.carrinho = []
                     st.session_state.reserva_concluida = True
                     st.rerun()
+    else:
+        st.info("👆 Selecione um ou mais números acima para ver o valor total e fechar o seu pedido.")
 
 # --- CONTEÚDO DA ABA 2: VER PRÊMIOS ---
 with aba_premios:
