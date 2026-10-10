@@ -40,10 +40,28 @@ st.markdown("""
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
 
-    /* --- ESTILIZAÇÃO DOS BOTÕES NATIVOS DA GRADE --- */
-    div[data-testid="stHorizontalBlock"] {
-        gap: 4px !important;
+    /* --- GRADE RESPONSIVA DOS NÚMEROS (CSS GRID) --- */
+    .rifa-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(42px, 1fr));
+        gap: 6px;
+        margin-top: 15px;
+        margin-bottom: 25px;
     }
+    .rifa-num {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 42px;
+        border-radius: 6px;
+        font-weight: bold;
+        font-size: 0.85em;
+        color: #ffffff;
+    }
+    .status-disponivel { background-color: #1f2833; border: 1px solid #45a29e; }
+    .status-selecionado { background-color: #28a745; border: 2px solid #ffffff; font-weight: 900; }
+    .status-reservado { background-color: #ffc107; color: #000000; }
+    .status-pago { background-color: #dc3545; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -133,7 +151,7 @@ st.markdown(f"### 🔥 Já vendemos **{numeros_indisponiveis}** de **{TOTAL_NUME
 st.progress(porcentagem_vendida)
 st.markdown("---")
 
-# --- PROJETO E PRÉMIOS (RESUMO) ---
+# --- PROJETO E PRÊMIOS (RESUMO) ---
 col_proj, col_premio = st.columns(2)
 
 with col_proj:
@@ -152,7 +170,7 @@ aba_comprar, aba_premios = st.tabs(["🎟️ Comprar Números", "🏆 Ver Prêmi
 # --- CONTEÚDO DA ABA 1: COMPRAR NÚMEROS ---
 with aba_comprar:
     st.header("💰 Combos Promocionais")
-    st.write("Escolha seus números na grade abaixo. O sistema calcula o **melhor desconto automaticamente**!")
+    st.write("Escolha seus números abaixo. O sistema calcula o **melhor desconto automaticamente**!")
 
     st.markdown("""
     <div class="promo-container">
@@ -181,31 +199,48 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS COM CAIXINHAS QUADRADAS ESTÁVEIS ---
-    st.subheader("👇 Clique nos quadradinhos para selecionar quantos números quiser:")
-    st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados (Carrinho)** | 🟡 **Reservados** | 🔴 **Pagos**")
+    st.markdown("---")
+    
+    # --- MULTISELECT PARA SELEÇÃO RÁPIDA DE VÁRIOS NÚMEROS ---
+    st.subheader("🎯 Selecione seus Números:")
+    
+    numeros_disponiveis = [num for num, status in st.session_state.numeros_status.items() if status == "Disponível"]
+    
+    selecionados = st.multiselect(
+        "Clique na caixa abaixo para pesquisar ou selecionar múltiplos números:",
+        options=numeros_disponiveis,
+        default=st.session_state.carrinho,
+        placeholder="Digite ou escolha os números..."
+    )
+    
+    st.session_state.carrinho = selecionados
 
-    # Usamos blocos nativos organizados em 5 colunas por linha para manter o aspeto quadradinho perfeito e estável em todos os dispositivos
-    cols_por_linha = 5
-    for i in range(0, TOTAL_NUMEROS, cols_por_linha):
-        cols = st.columns(cols_por_linha)
-        for j in range(cols_por_linha):
-            num = i + j + 1
-            if num <= TOTAL_NUMEROS:
-                status = st.session_state.numeros_status[num]
-                
-                if num in st.session_state.carrinho:
-                    if cols[j].button(f"✓ {num}", key=f"caixa_{num}", type="primary", use_container_width=True):
-                        st.session_state.carrinho.remove(num)
-                        st.rerun()
-                elif status == "Disponível":
-                    if cols[j].button(f"{num}", key=f"caixa_{num}", type="secondary", use_container_width=True):
-                        st.session_state.carrinho.append(num)
-                        st.rerun()
-                elif status == "Reservado":
-                    cols[j].markdown(f"<div style='background-color:#ffc107; color:#000000; text-align:center; padding:10px 0; border-radius:5px; font-weight:bold; font-size:0.85em;'>{num}<br>Res.</div>", unsafe_allow_html=True)
-                else:
-                    cols[j].markdown(f"<div style='background-color:#dc3545; color:#ffffff; text-align:center; padding:10px 0; border-radius:5px; font-weight:bold; font-size:0.85em;'>{num}<br>Pago</div>", unsafe_allow_html=True)
+    # --- MAPA VISUAL DOS NÚMEROS EM CSS GRID (Responsivo para Celular) ---
+    st.markdown("### 📊 Status da Grade de Números")
+    st.markdown("🟦 **Disponível** | 🟩 **Selecionado** | 🟡 **Reservado** | 🔴 **Pago**")
+    
+    grid_html = '<div class="rifa-grid">'
+    
+    for num in range(1, TOTAL_NUMEROS + 1):
+        status = st.session_state.numeros_status.get(num, "Disponível")
+        
+        if num in st.session_state.carrinho:
+            classe = "status-selecionado"
+            label = f"✓{num}"
+        elif status == "Disponível":
+            classe = "status-disponivel"
+            label = str(num)
+        elif status == "Reservado":
+            classe = "status-reservado"
+            label = f"{num}"
+        else:
+            classe = "status-pago"
+            label = f"{num}"
+            
+        grid_html += f'<div class="rifa-num {classe}">{label}</div>'
+        
+    grid_html += "</div>"
+    st.markdown(grid_html, unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -297,7 +332,6 @@ with aba_premios:
             st.image("premio3.jpeg", use_container_width=True)
         else:
             st.info("Imagem da Cesta em breve!")
-
 
 # --- PAINEL DO ADMINISTRADOR ---
 st.markdown("---")
