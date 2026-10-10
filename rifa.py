@@ -12,15 +12,10 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & CORREÇÃO MOBILE) ---
+# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & GRADE RESPONSIVA) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0c10; color: #ffffff; }
-    button[kind="secondary"] { border-color: #3b42f5 !important; color: #ffffff !important; background-color: transparent !important; transition: all 0.3s; }
-    button[kind="secondary"]:hover { background-color: #3b42f5 !important; border-color: #3b42f5 !important; font-weight: bold; }
-    button[kind="primary"] { background-color: #28a745 !important; border-color: #28a745 !important; color: #ffffff !important; font-weight: bold !important; }
-    button[kind="primary"]:hover { background-color: #218838 !important; border-color: #218838 !important; }
-    div[data-testid="metric-container"] { background-color: #1f2833; border: 1px solid #3b42f5; border-radius: 8px; padding: 10px; }
     
     /* Arredondar cantos das imagens para um look premium */
     img { border-radius: 15px; }
@@ -36,20 +31,61 @@ st.markdown("""
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
 
-    /* --- CORREÇÃO DA GRADE PARA CELULAR (SMARTPHONE FIX) --- */
+    /* --- GRADE DE NÚMEROS OTIMIZADA PARA PC E CELULAR --- */
+    .rifa-grid {
+        display: grid;
+        grid-template-columns: repeat(10, 1fr);
+        gap: 6px;
+        margin-bottom: 20px;
+    }
     @media (max-width: 768px) {
-        /* Desativa o empilhamento automático apenas para a grade de números */
-        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(5)) {
-            flex-direction: row !important;
-            flex-wrap: wrap !important;
-            gap: 0px !important;
+        .rifa-grid {
+            grid-template-columns: repeat(5, 1fr); /* 5 números por linha no telemóvel */
+            gap: 5px;
         }
-        /* Define que teremos 5 botões por linha no celular (20% de largura cada) */
-        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(5)) > div[data-testid="column"] {
-            width: calc(20% - 8px) !important;
-            min-width: calc(20% - 8px) !important;
-            flex: 0 0 calc(20% - 8px) !important;
-        }
+    }
+    .num-btn {
+        background-color: transparent;
+        border: 1px solid #3b42f5;
+        color: white;
+        padding: 10px 0;
+        text-align: center;
+        border-radius: 6px;
+        font-weight: bold;
+        cursor: pointer;
+        font-size: 0.9em;
+        transition: 0.2s;
+        text-decoration: none;
+        display: block;
+    }
+    .num-btn:hover {
+        background-color: #3b42f5;
+        color: white;
+    }
+    .num-selecionado {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
+        color: white !important;
+    }
+    .num-reservado {
+        background-color: #856404 !important;
+        border-color: #856404 !important;
+        color: white !important;
+        text-align: center;
+        padding: 10px 0;
+        border-radius: 6px;
+        font-size: 0.9em;
+        font-weight: bold;
+    }
+    .num-pago {
+        background-color: #721c24 !important;
+        border-color: #721c24 !important;
+        color: white !important;
+        text-align: center;
+        padding: 10px 0;
+        border-radius: 6px;
+        font-size: 0.9em;
+        font-weight: bold;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -131,7 +167,7 @@ if os.path.exists("fotocarro.jpeg"):
     img_cortada = img_original.crop((0, topo, w, fundo))
     st.image(img_cortada, use_container_width=True)
 
-# --- BARRA DE PROGRESSO DE VENDAS (AGORA POR QUANTIDADE) ---
+# --- BARRA DE PROGRESSO DE VENDAS ---
 numeros_indisponiveis = sum(1 for status in st.session_state.numeros_status.values() if status != "Disponível")
 porcentagem_vendida = numeros_indisponiveis / TOTAL_NUMEROS
 
@@ -188,32 +224,43 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- GRADE VISUAL ---
+    # --- GRADE VISUAL OTIMIZADA ---
     st.subheader("👇 Clique nos números que deseja comprar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    with st.container():
-        cols_por_linha = 10
-        for i in range(0, TOTAL_NUMEROS, cols_por_linha):
-            cols = st.columns(cols_por_linha)
-            for j in range(cols_por_linha):
-                num = i + j + 1
-                if num <= TOTAL_NUMEROS:
-                    status = st.session_state.numeros_status[num]
-                    
-                    if num in st.session_state.carrinho:
-                        if cols[j].button(f"{num}", key=f"btn_{num}", type="primary", use_container_width=True):
-                            st.session_state.carrinho.remove(num)
-                            st.rerun()
-                    elif status == "Disponível":
-                        if cols[j].button(f"{num}", key=f"btn_{num}", type="secondary", use_container_width=True):
-                            st.session_state.carrinho.append(num)
-                            st.rerun()
-                    elif status == "Reservado":
-                        cols[j].markdown(f"<div style='text-align:center; padding:5px; margin:2px; background-color:#856404; color:white; border-radius:5px;'>{num}</div>", unsafe_allow_html=True)
+    # Captura clique de números via query parameters do Streamlit
+    query_params = st.query_params
+    if "clique_num" in query_params:
+        try:
+            num_clicado = int(query_params["clique_num"])
+            if 1 <= num_clicado <= TOTAL_NUMEROS:
+                status_atual = st.session_state.numeros_status[num_clicado]
+                if status_atual == "Disponível":
+                    if num_clicado in st.session_state.carrinho:
+                        st.session_state.carrinho.remove(num_clicado)
                     else:
-                        cols[j].markdown(f"<div style='text-align:center; padding:5px; margin:2px; background-color:#721c24; color:white; border-radius:5px;'>{num}</div>", unsafe_allow_html=True)
+                        st.session_state.carrinho.append(num_clicado)
+            # Limpa o parâmetro para evitar cliques duplicados em reloads
+            st.query_params.clear()
+            st.rerun()
+        except:
+            pass
 
+    # Constrói a grelha em HTML puro para garantir perfeição no telemóvel e PC
+    grid_html = '<div class="rifa-grid">'
+    for num in range(1, TOTAL_NUMEROS + 1):
+        status = st.session_state.numeros_status[num]
+        if num in st.session_state.carrinho:
+            grid_html += f'<a href="?clique_num={num}" target="_self" class="num-btn num-selecionado">{num}</a>'
+        elif status == "Disponível":
+            grid_html += f'<a href="?clique_num={num}" target="_self" class="num-btn">{num}</a>'
+        elif status == "Reservado":
+            grid_html += f'<div class="num-reservado">{num}</div>'
+        else:
+            grid_html += f'<div class="num-pago">{num}</div>'
+    grid_html += '</div>'
+
+    st.markdown(grid_html, unsafe_allow_html=True)
     st.markdown("---")
 
     # --- CHECKOUT E PAGAMENTO ---
@@ -326,6 +373,8 @@ with st.expander("🔐 Área do Administrador"):
         with col_cancela:
             if st.button("❌ Cancelar Reserva", use_container_width=True):
                 st.session_state.numeros_status[num_admin] = "Disponível"
+                if num_admin in st.session_state.carrinho:
+                    pass
                 if num_admin in st.session_state.compradores:
                     del st.session_state.compradores[num_admin]
                 salvar_dados()
