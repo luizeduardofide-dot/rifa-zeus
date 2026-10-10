@@ -235,40 +235,69 @@ with aba_comprar:
     """, unsafe_allow_html=True)
 
     # --- SELEÇÃO DE NÚMEROS MÚLTIPLA NA GRADE QUADRADA ---
-    st.subheader("👇 Clique nos quadradinhos para selecionar vários números:")
-    st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados (Carrinho)** | 🟡 **Reservados** | 🔴 **Pagos**")
+    # --- SELEÇÃO DE NÚMEROS MÚLTIPLA ---
 
-    query_params = st.query_params
-    if "toggle_num" in query_params:
-        try:
-            num_clicado = int(query_params["toggle_num"])
-            if 1 <= num_clicado <= TOTAL_NUMEROS:
-                status_atual, _ = carregar_dados()
-                if status_atual[num_clicado] == "Disponível":
-                    if num_clicado in st.session_state.carrinho:
-                        st.session_state.carrinho.remove(num_clicado)
-                    else:
-                        st.session_state.carrinho.append(num_clicado)
-            st.query_params.clear()
-            st.rerun()
-        except:
-            pass
+    def alternar_numero(num):
+        # Verifica o status mais recente salvo no arquivo
+        status_atual, _ = carregar_dados()
 
-    # Constrói a grelha em caixas quadradas perfeitamente responsivas
-    grid_html = '<div class="rifa-grid">'
-    for num in range(1, TOTAL_NUMEROS + 1):
-        status = st.session_state.numeros_status[num]
+        if status_atual.get(num) != "Disponível":
+            return
+
         if num in st.session_state.carrinho:
-            grid_html += f'<a href="?toggle_num={num}" target="_self" class="num-box num-selecionado">✓ {num}</a>'
-        elif status == "Disponível":
-            grid_html += f'<a href="?toggle_num={num}" target="_self" class="num-box">{num}</a>'
-        elif status == "Reservado":
-            grid_html += f'<div class="num-reservado">Nº {num}<br>Res.</div>'
+            st.session_state.carrinho.remove(num)
         else:
-            grid_html += f'<div class="num-pago">Nº {num}<br>Pago</div>'
-    grid_html += '</div>'
+            st.session_state.carrinho.append(num)
 
-    st.markdown(grid_html, unsafe_allow_html=True)
+    st.subheader("👇 Clique nos quadradinhos para selecionar vários números:")
+    st.markdown(
+        "🟦 **Disponíveis** | 🟩 **Selecionados** | "
+        "🟡 **Reservados** | 🔴 **Pagos**"
+    )
+
+    # Atualiza os status salvos antes de montar a grade
+    numeros_atualizados, _ = carregar_dados()
+    st.session_state.numeros_status.update(numeros_atualizados)
+
+    # Grade de números com botões reais do Streamlit
+    colunas_por_linha = 10
+
+    for inicio in range(1, TOTAL_NUMEROS + 1, colunas_por_linha):
+        colunas = st.columns(colunas_por_linha)
+
+        for indice, num in enumerate(
+            range(inicio, min(inicio + colunas_por_linha, TOTAL_NUMEROS + 1))
+        ):
+            status = st.session_state.numeros_status[num]
+            selecionado = num in st.session_state.carrinho
+
+            with colunas[indice]:
+                if status == "Disponível":
+                    st.button(
+                        f"✓ {num}" if selecionado else str(num),
+                        key=f"numero_{num}",
+                        type="primary" if selecionado else "secondary",
+                        use_container_width=True,
+                        on_click=alternar_numero,
+                        args=(num,),
+                    )
+
+                elif status == "Reservado":
+                    st.button(
+                        f"🟡 {num}",
+                        key=f"numero_{num}",
+                        disabled=True,
+                        use_container_width=True,
+                    )
+
+                else:
+                    st.button(
+                        f"🔴 {num}",
+                        key=f"numero_{num}",
+                        disabled=True,
+                        use_container_width=True,
+                    )
+
     st.markdown("---")
 
     # --- CHECKOUT E PAGAMENTO ---
