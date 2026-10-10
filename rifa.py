@@ -40,61 +40,9 @@ st.markdown("""
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
 
-    /* --- GRADE DE NÚMEROS HÍBRIDA (GARANTE 5 COLUNAS NO CELULAR E 10 NO PC COM CONTRASTE PERFEITO) --- */
-    .rifa-grid {
-        display: grid;
-        grid-template-columns: repeat(10, 1fr);
-        gap: 6px;
-        margin-bottom: 20px;
-    }
-    @media (max-width: 768px) {
-        .rifa-grid {
-            grid-template-columns: repeat(5, 1fr) !important;
-            gap: 5px;
-        }
-    }
-    .num-btn {
-        background-color: #1f2833;
-        border: 1px solid #3b42f5;
-        color: #ffffff !important;
-        padding: 10px 0;
-        text-align: center;
-        border-radius: 6px;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 0.9em;
-        text-decoration: none;
-        display: block;
-    }
-    .num-btn:hover {
-        background-color: #3b42f5;
-        color: #ffffff !important;
-    }
-    .num-selecionado {
-        background-color: #28a745 !important;
-        border-color: #28a745 !important;
-        color: #ffffff !important;
-    }
-    .num-reservado-box {
-        background-color: #ffc107 !important;
-        color: #000000 !important;
-        text-align: center;
-        padding: 8px 0;
-        border-radius: 6px;
-        font-size: 0.85em;
-        font-weight: bold;
-        display: block;
-    }
-    .num-pago-box {
-        background-color: #dc3545 !important;
-        color: #ffffff !important;
-        text-align: center;
-        padding: 8px 0;
-        border-radius: 6px;
-        font-size: 0.85em;
-        font-weight: bold;
-        display: block;
-    }
+    /* Caixas estilizadas e legíveis para números já ocupados */
+    .num-reservado-box { background-color: #ffc107 !important; color: #000000 !important; text-align: center; padding: 10px 0; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin: 2px 0; border: 1px solid #b38f00; }
+    .num-pago-box { background-color: #dc3545 !important; color: #ffffff !important; text-align: center; padding: 10px 0; border-radius: 6px; font-size: 0.85em; font-weight: bold; margin: 2px 0; border: 1px solid #a71d2a; }
     </style>
 """, unsafe_allow_html=True)
 
@@ -232,41 +180,31 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS MÚLTIPLA VIA GRID CSS ---
-    st.subheader("👇 Clique nos números que deseja comprar (selecione quantos quiser):")
+    # --- SELEÇÃO DE NÚMEROS COM BOTÕES NATIVOS MULTI-SELECIONÁVEIS ---
+    st.subheader("👇 Clique nos números que deseja comprar (podes selecionar vários):")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados no Carrinho** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    query_params = st.query_params
-    if "toggle_num" in query_params:
-        try:
-            num_clicado = int(query_params["toggle_num"])
-            if 1 <= num_clicado <= TOTAL_NUMEROS:
-                status_atual, _ = carregar_dados()
-                if status_atual[num_clicado] == "Disponível":
-                    if num_clicado in st.session_state.carrinho:
-                        st.session_state.carrinho.remove(num_clicado)
-                    else:
-                        st.session_state.carrinho.append(num_clicado)
-            st.query_params.clear()
-            st.rerun()
-        except:
-            pass
+    cols_por_linha = 10
+    for i in range(0, TOTAL_NUMEROS, cols_por_linha):
+        cols = st.columns(cols_por_linha)
+        for j in range(cols_por_linha):
+            num = i + j + 1
+            if num <= TOTAL_NUMEROS:
+                status = st.session_state.numeros_status[num]
+                
+                if num in st.session_state.carrinho:
+                    if cols[j].button(f"✓ {num}", key=f"btn_car_{num}", type="primary", use_container_width=True):
+                        st.session_state.carrinho.remove(num)
+                        st.rerun()
+                elif status == "Disponível":
+                    if cols[j].button(f"{num}", key=f"btn_disp_{num}", type="secondary", use_container_width=True):
+                        st.session_state.carrinho.append(num)
+                        st.rerun()
+                elif status == "Reservado":
+                    cols[j].markdown(f"<div class='num-reservado-box'>Nº {num}<br>Res.</div>", unsafe_allow_html=True)
+                else:
+                    cols[j].markdown(f"<div class='num-pago-box'>Nº {num}<br>Pago</div>", unsafe_allow_html=True)
 
-    # Constrói a grelha em grid CSS puro que se adapta perfeitamente ao telemóvel sem quebrar colunas
-    grid_html = '<div class="rifa-grid">'
-    for num in range(1, TOTAL_NUMEROS + 1):
-        status = st.session_state.numeros_status[num]
-        if num in st.session_state.carrinho:
-            grid_html += f'<a href="?toggle_num={num}" target="_self" class="num-btn num-selecionado">✓ {num}</a>'
-        elif status == "Disponível":
-            grid_html += f'<a href="?toggle_num={num}" target="_self" class="num-btn">{num}</a>'
-        elif status == "Reservado":
-            grid_html += f'<div class="num-reservado-box">{num}<br><span style="font-size:0.75em;">Res.</span></div>'
-        else:
-            grid_html += f'<div class="num-pago-box">{num}<br><span style="font-size:0.75em;">Pago</span></div>'
-    grid_html += '</div>'
-
-    st.markdown(grid_html, unsafe_allow_html=True)
     st.markdown("---")
 
     # --- CHECKOUT E PAGAMENTO ---
