@@ -12,7 +12,7 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & GRADE CSS PERFEITA) ---
+# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & GRADE RESPONSIVA) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0c10; color: #ffffff; }
@@ -40,62 +40,9 @@ st.markdown("""
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
 
-    /* --- GRADE DE CAIXINHAS QUADRADAS (10 COLUNAS NO PC / 5 NO CELULAR) --- */
-    .rifa-grid {
-        display: grid;
-        grid-template-columns: repeat(10, 1fr);
-        gap: 6px;
-        margin-bottom: 20px;
-    }
-    @media (max-width: 768px) {
-        .rifa-grid {
-            grid-template-columns: repeat(5, 1fr) !important;
-            gap: 5px;
-        }
-    }
-    .num-box {
-        background-color: #1f2833;
-        border: 1px solid #3b42f5;
-        color: #ffffff;
-        padding: 12px 0;
-        text-align: center;
-        border-radius: 6px;
-        font-weight: bold;
-        font-size: 0.95em;
-        text-decoration: none;
-        display: block;
-        transition: 0.2s;
-    }
-    .num-box:hover {
-        border-color: #ffffff;
-        background-color: #2c3848;
-    }
-    .num-selecionado {
-        background-color: #28a745 !important;
-        border-color: #ffffff !important;
-        color: #ffffff !important;
-    }
-    .num-reservado {
-        background-color: #ffc107 !important;
-        border-color: #b38f00 !important;
-        color: #000000 !important;
-        text-align: center;
-        padding: 8px 0;
-        border-radius: 6px;
-        font-size: 0.8em;
-        font-weight: bold;
-        display: block;
-    }
-    .num-pago {
-        background-color: #dc3545 !important;
-        border-color: #a71d2a !important;
-        color: #ffffff !important;
-        text-align: center;
-        padding: 8px 0;
-        border-radius: 6px;
-        font-size: 0.8em;
-        font-weight: bold;
-        display: block;
+    /* --- ESTILIZAÇÃO DOS BOTÕES NATIVOS DA GRADE --- */
+    div[data-testid="stHorizontalBlock"] {
+        gap: 4px !important;
     }
     </style>
 """, unsafe_allow_html=True)
@@ -234,69 +181,31 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS MÚLTIPLA NA GRADE QUADRADA ---
-    # --- SELEÇÃO DE NÚMEROS MÚLTIPLA ---
+    # --- SELEÇÃO DE NÚMEROS COM CAIXINHAS QUADRADAS ESTÁVEIS ---
+    st.subheader("👇 Clique nos quadradinhos para selecionar quantos números quiser:")
+    st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados (Carrinho)** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    def alternar_numero(num):
-        # Verifica o status mais recente salvo no arquivo
-        status_atual, _ = carregar_dados()
-
-        if status_atual.get(num) != "Disponível":
-            return
-
-        if num in st.session_state.carrinho:
-            st.session_state.carrinho.remove(num)
-        else:
-            st.session_state.carrinho.append(num)
-
-    st.subheader("👇 Clique nos quadradinhos para selecionar vários números:")
-    st.markdown(
-        "🟦 **Disponíveis** | 🟩 **Selecionados** | "
-        "🟡 **Reservados** | 🔴 **Pagos**"
-    )
-
-    # Atualiza os status salvos antes de montar a grade
-    numeros_atualizados, _ = carregar_dados()
-    st.session_state.numeros_status.update(numeros_atualizados)
-
-    # Grade de números com botões reais do Streamlit
-    colunas_por_linha = 10
-
-    for inicio in range(1, TOTAL_NUMEROS + 1, colunas_por_linha):
-        colunas = st.columns(colunas_por_linha)
-
-        for indice, num in enumerate(
-            range(inicio, min(inicio + colunas_por_linha, TOTAL_NUMEROS + 1))
-        ):
-            status = st.session_state.numeros_status[num]
-            selecionado = num in st.session_state.carrinho
-
-            with colunas[indice]:
-                if status == "Disponível":
-                    st.button(
-                        f"✓ {num}" if selecionado else str(num),
-                        key=f"numero_{num}",
-                        type="primary" if selecionado else "secondary",
-                        use_container_width=True,
-                        on_click=alternar_numero,
-                        args=(num,),
-                    )
-
+    # Usamos blocos nativos organizados em 5 colunas por linha para manter o aspeto quadradinho perfeito e estável em todos os dispositivos
+    cols_por_linha = 5
+    for i in range(0, TOTAL_NUMEROS, cols_por_linha):
+        cols = st.columns(cols_por_linha)
+        for j in range(cols_por_linha):
+            num = i + j + 1
+            if num <= TOTAL_NUMEROS:
+                status = st.session_state.numeros_status[num]
+                
+                if num in st.session_state.carrinho:
+                    if cols[j].button(f"✓ {num}", key=f"caixa_{num}", type="primary", use_container_width=True):
+                        st.session_state.carrinho.remove(num)
+                        st.rerun()
+                elif status == "Disponível":
+                    if cols[j].button(f"{num}", key=f"caixa_{num}", type="secondary", use_container_width=True):
+                        st.session_state.carrinho.append(num)
+                        st.rerun()
                 elif status == "Reservado":
-                    st.button(
-                        f"🟡 {num}",
-                        key=f"numero_{num}",
-                        disabled=True,
-                        use_container_width=True,
-                    )
-
+                    cols[j].markdown(f"<div style='background-color:#ffc107; color:#000000; text-align:center; padding:10px 0; border-radius:5px; font-weight:bold; font-size:0.85em;'>{num}<br>Res.</div>", unsafe_allow_html=True)
                 else:
-                    st.button(
-                        f"🔴 {num}",
-                        key=f"numero_{num}",
-                        disabled=True,
-                        use_container_width=True,
-                    )
+                    cols[j].markdown(f"<div style='background-color:#dc3545; color:#ffffff; text-align:center; padding:10px 0; border-radius:5px; font-weight:bold; font-size:0.85em;'>{num}<br>Pago</div>", unsafe_allow_html=True)
 
     st.markdown("---")
 
