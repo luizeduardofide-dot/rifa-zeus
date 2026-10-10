@@ -13,7 +13,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- DESIGN CUSTOMIZADO (FLEXBOX MATEMÁTICO) ---
+# --- DESIGN CUSTOMIZADO (COMPATÍVEL COM TODOS OS CELULARES) ---
 st.markdown("""
     <style>
     /* Força o fundo escuro em tudo */
@@ -23,11 +23,13 @@ st.markdown("""
     html, body, [data-testid="stAppViewContainer"], .main {
         overflow-x: hidden !important;
         max-width: 100vw !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
     }
     
     img { border-radius: 15px; }
     
-    /* --- CORREÇÃO DO LOGO NO CELULAR --- */
+    /* --- CORREÇÃO DO LOGO --- */
     @media (max-width: 768px) {
         div[data-testid="column"]:first-child img {
             max-width: 90px !important;
@@ -78,37 +80,32 @@ st.markdown("""
     .box-res { background-color: #ffc107; color: #000000; border: 1px solid #d39e00; }
     .box-pago { background-color: #dc3545; color: #ffffff; border: 1px solid #bd2130; }
 
-    /* --- MAGIA CSS: FLEXBOX MATEMÁTICO PARA A GRADE DE NÚMEROS --- */
+    /* ========================================================= */
+    /* A MÁGICA INFALÍVEL PARA CELULARES (SEM USAR :has) */
+    /* ========================================================= */
     
-    /* 1. Força as linhas de 5 colunas a ficarem lado a lado (Row) sempre! */
-    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 6px !important;
-        margin-bottom: 6px !important;
-        width: 100% !important;
-    }
-    
-    /* 2. Calcula a largura das colunas: 20% menos os espaços */
-    div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) > div[data-testid="column"] {
-        width: calc(20% - 4.8px) !important;
-        flex: 1 1 0% !important;
-        min-width: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* 3. Ajuste fino EXCLUSIVO para celulares (Para não vazar a tela) */
     @media (max-width: 768px) {
-        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) {
-            gap: 4px !important; /* Espaço menor no celular */
+        /* 1. Força os blocos a não empilharem sozinhos, permitindo a quebra de linha natural */
+        div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            justify-content: space-between !important;
+            gap: 4px !important;
             margin-bottom: 4px !important;
         }
-        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="column"]:nth-child(5):last-child) > div[data-testid="column"] {
-            width: calc(20% - 3.2px) !important; /* Conta matemática exata para dar 100% */
+
+        /* 2. Seleciona EXATAMENTE os blocos que possuem 5 colunas (nossa grade de números) 
+           e força eles a terem 18% da tela cada um. 18% * 5 = 90% (evita vazar a tela!) */
+        div[data-testid="column"]:first-child:nth-last-child(5),
+        div[data-testid="column"]:first-child:nth-last-child(5) ~ div[data-testid="column"] {
+            width: 18.5% !important;
+            flex: 0 0 18.5% !important;
+            min-width: 18.5% !important;
+            padding: 0 !important;
         }
-        
-        /* Ajusta o tamanho da fonte e botão para caber bonitinho no mobile */
+
+        /* 3. Ajuste do tamanho dos botões para o celular ficar elegante */
         button[kind="secondary"], button[kind="primary"], .caixa-status {
             height: 42px !important;
             font-size: 14px !important;
@@ -254,7 +251,6 @@ with aba_comprar:
             if num <= TOTAL_NUMEROS:
                 status = st.session_state.numeros_status[num]
                 
-                # Se selecionado, renderiza verde (primary) / Se disponível renderiza escuro (secondary)
                 if num in st.session_state.carrinho:
                     cols[j].button(f"{num}", key=f"btn_{num}", type="primary", use_container_width=True, on_click=toggle_numero, args=(num,))
                 elif status == "Disponível":
