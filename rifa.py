@@ -22,7 +22,7 @@ st.markdown("""
         color: #ffffff; 
     }
     
-    /* REMOVE MARGENS LATERAIS DA PÁGINA E TRAVA ROLAGEM HORIZONTAL */
+    /* BLOQUEIO DE ROLAGEM HORIZONTAL E AJUSTE DO TOPO PARA A BARRA DO STREAMLIT CLOUD */
     html, body, [data-testid="stAppViewContainer"], .main {
         overflow-x: hidden !important;
         max-width: 100vw !important;
@@ -31,16 +31,16 @@ st.markdown("""
     [data-testid="stMainBlockContainer"], .block-container {
         padding-left: 10px !important;
         padding-right: 10px !important;
-        padding-top: 1rem !important;
+        padding-top: 3.5rem !important; /* Espaço suficiente para não cortar o título na nuvem */
         max-width: 100% !important;
     }
 
     img { border-radius: 15px; }
     
-    /* --- CORREÇÃO DO LOGO NO MOBILE --- */
+    /* --- CORREÇÃO DA LOGO NO MOBILE --- */
     @media (max-width: 768px) {
         div[data-testid="stColumn"]:first-child img {
-            max-width: 85px !important;
+            max-width: 80px !important;
             margin: 0 auto;
             display: block;
         }
@@ -48,7 +48,7 @@ st.markdown("""
     
     /* --- PROMOÇÕES --- */
     .promo-container { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; justify-content: center; }
-    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 12px; text-align: center; flex: 1 1 110px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
+    .promo-card { background: linear-gradient(145deg, #1f2833, #0b0c10); border: 1px solid #3b42f5; border-radius: 10px; padding: 12px; text-align: center; flex: 1 1 100px; box-shadow: 0 4px 8px rgba(59, 66, 245, 0.15); }
     .promo-card.destaque { border: 2px solid #ffcc00; box-shadow: 0 0 12px rgba(255, 204, 0, 0.4); transform: scale(1.03); }
     .promo-qtd { font-size: 1em; font-weight: bold; color: #ffffff; margin-bottom: 4px;}
     .promo-valor { font-size: 1.25em; font-weight: 900; color: #28a745; }
@@ -91,17 +91,6 @@ st.markdown("""
     /* FORÇAR 5 COLUNAS APENAS NA GRADE DE NÚMEROS NO MOBILE     */
     /* ========================================================= */
     @media (max-width: 768px) {
-        /* Aplica o estilo de 5 colunas somente para as linhas da cartela de números */
-        div[data-testid="stColumn"]:first-child:nth-last-child(5),
-        div[data-testid="stColumn"]:first-child:nth-last-child(5) ~ div[data-testid="stColumn"] {
-            width: 0 !important;
-            min-width: 0 !important;
-            flex: 1 1 0% !important;
-            padding: 0 !important;
-            margin: 0 !important;
-        }
-
-        /* Garante alinhamento das linhas da grade de números */
         div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(5)) {
             display: flex !important;
             flex-direction: row !important;
@@ -109,6 +98,14 @@ st.markdown("""
             gap: 3px !important;
             margin-bottom: 3px !important;
             width: 100% !important;
+        }
+
+        div[data-testid="stHorizontalBlock"]:has(> div[data-testid="stColumn"]:nth-child(5)) > div[data-testid="stColumn"] {
+            width: 0 !important;
+            min-width: 0 !important;
+            flex: 1 1 0% !important;
+            padding: 0 !important;
+            margin: 0 !important;
         }
 
         button[kind="secondary"], button[kind="primary"], .caixa-status {
@@ -181,15 +178,15 @@ def calcular_total(qtd):
     return total
 
 # --- CABEÇALHO ---
-col_logo, col_titulo = st.columns([1, 4])
+col_logo, col_titulo = st.columns([1, 3], vertical_alignment="center")
 
 with col_logo:
     if os.path.exists("fotologo.jpeg"):
         st.image("fotologo.jpeg", use_container_width=True)
 
 with col_titulo:
-    st.markdown("<h1 style='margin: 0; padding: 0;'>Rifa - Equipe Zeus</h1>", unsafe_allow_html=True)
-    st.markdown("Acelerando sonhos com o Fórmula SAE UFLA!")
+    st.markdown("<h2 style='margin: 0; padding: 0; font-size: 1.8rem; font-weight: 800;'>Rifa - Equipe Zeus</h2>", unsafe_allow_html=True)
+    st.markdown("<p style='margin: 0; padding-top: 4px; color: #a0a0a0; font-size: 0.95rem;'>Acelerando sonhos com o Fórmula SAE UFLA!</p>", unsafe_allow_html=True)
 
 st.markdown("---")
 
