@@ -12,13 +12,22 @@ st.set_page_config(
     layout="centered"
 )
 
-# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & GRADE RESPONSIVA) ---
+# --- DESIGN CUSTOMIZADO (IDENTIDADE ZEUS & AJUSTE MOBILE) ---
 st.markdown("""
     <style>
     .stApp { background-color: #0b0c10; color: #ffffff; }
     
     /* Arredondar cantos das imagens para um look premium */
     img { border-radius: 15px; }
+    
+    /* --- CORREÇÃO DO LOGÓTIPO NO CELULAR --- */
+    @media (max-width: 768px) {
+        div[data-testid="column"]:first-child img {
+            max-width: 90px !important;
+            margin: 0 auto;
+            display: block;
+        }
+    }
     
     /* --- ESTILOS PARA AS PROMOÇÕES --- */
     .promo-container { display: flex; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; justify-content: center; }
@@ -30,63 +39,6 @@ st.markdown("""
     
     /* Customizar a barra de progresso */
     .stProgress > div > div > div { background-color: #28a745; }
-
-    /* --- GRADE DE NÚMEROS OTIMIZADA PARA PC E CELULAR --- */
-    .rifa-grid {
-        display: grid;
-        grid-template-columns: repeat(10, 1fr);
-        gap: 6px;
-        margin-bottom: 20px;
-    }
-    @media (max-width: 768px) {
-        .rifa-grid {
-            grid-template-columns: repeat(5, 1fr); /* 5 números por linha no telemóvel */
-            gap: 5px;
-        }
-    }
-    .num-btn {
-        background-color: transparent;
-        border: 1px solid #3b42f5;
-        color: white;
-        padding: 10px 0;
-        text-align: center;
-        border-radius: 6px;
-        font-weight: bold;
-        cursor: pointer;
-        font-size: 0.9em;
-        transition: 0.2s;
-        text-decoration: none;
-        display: block;
-    }
-    .num-btn:hover {
-        background-color: #3b42f5;
-        color: white;
-    }
-    .num-selecionado {
-        background-color: #28a745 !important;
-        border-color: #28a745 !important;
-        color: white !important;
-    }
-    .num-reservado {
-        background-color: #856404 !important;
-        border-color: #856404 !important;
-        color: white !important;
-        text-align: center;
-        padding: 10px 0;
-        border-radius: 6px;
-        font-size: 0.9em;
-        font-weight: bold;
-    }
-    .num-pago {
-        background-color: #721c24 !important;
-        border-color: #721c24 !important;
-        color: white !important;
-        text-align: center;
-        padding: 10px 0;
-        border-radius: 6px;
-        font-size: 0.9em;
-        font-weight: bold;
-    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -187,7 +139,7 @@ with col_premio:
     st.subheader("🏆 Sorteio: 18/12")
     st.write("Confira as fotos detalhadas dos prêmios na aba **'Ver Prêmios'** logo abaixo!")
 
-st.write("") # Espaço
+st.write("") 
 
 # --- SISTEMA DE ABAS (TABS) ---
 aba_comprar, aba_premios = st.tabs(["🎟️ Comprar Números", "🏆 Ver Prêmios"])
@@ -224,43 +176,38 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- GRADE VISUAL OTIMIZADA ---
-    st.subheader("👇 Clique nos números que deseja comprar:")
-    st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
+    # --- SELEÇÃO DE NÚMEROS OTIMIZADA COM CHECKBOXES ---
+    st.subheader("👇 Selecione os números que deseja comprar:")
+    st.markdown("* 🟦 **Disponíveis** | 🟩 **No Carrinho** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    # Captura clique de números via query parameters do Streamlit
-    query_params = st.query_params
-    if "clique_num" in query_params:
-        try:
-            num_clicado = int(query_params["clique_num"])
-            if 1 <= num_clicado <= TOTAL_NUMEROS:
-                status_atual = st.session_state.numeros_status[num_clicado]
-                if status_atual == "Disponível":
-                    if num_clicado in st.session_state.carrinho:
-                        st.session_state.carrinho.remove(num_clicado)
+    with st.form(key="form_selecao_rifa"):
+        # Criação da grade adaptável em colunas nativas sem lentidão excessiva
+        cols_por_linha = 5 # 5 colunas funciona perfeitamente bem tanto em PC quanto em Telemóvel
+        for i in range(0, TOTAL_NUMEROS, cols_por_linha):
+            cols = st.columns(cols_por_linha)
+            for j in range(cols_por_linha):
+                num = i + j + 1
+                if num <= TOTAL_NUMEROS:
+                    status = st.session_state.numeros_status[num]
+                    
+                    if status == "Disponível":
+                        # Mantém estado no carrinho
+                        ja_selecionado = num in st.session_state.carrinho
+                        selecionado = cols[j].checkbox(f"Nº {num}", value=ja_selecionado, key=f"chk_{num}")
+                        
+                        if selecionado and num not in st.session_state.carrinho:
+                            st.session_state.carrinho.append(num)
+                        elif not selecionado and num in st.session_state.carrinho:
+                            st.session_state.carrinho.remove(num)
+                            
+                    elif status == "Reservado":
+                        cols[j].markdown(f"<div style='text-align:center; padding:8px; background-color:#856404; color:white; border-radius:5px; font-size:0.85em;'>Nº {num}<br><b>Reservado</b></div>", unsafe_allow_html=True)
                     else:
-                        st.session_state.carrinho.append(num_clicado)
-            # Limpa o parâmetro para evitar cliques duplicados em reloads
-            st.query_params.clear()
-            st.rerun()
-        except:
-            pass
+                        cols[j].markdown(f"<div style='text-align:center; padding:8px; background-color:#721c24; color:white; border-radius:5px; font-size:0.85em;'>Nº {num}<br><b>Pago</b></div>", unsafe_allow_html=True)
 
-    # Constrói a grelha em HTML puro para garantir perfeição no telemóvel e PC
-    grid_html = '<div class="rifa-grid">'
-    for num in range(1, TOTAL_NUMEROS + 1):
-        status = st.session_state.numeros_status[num]
-        if num in st.session_state.carrinho:
-            grid_html += f'<a href="?clique_num={num}" target="_self" class="num-btn num-selecionado">{num}</a>'
-        elif status == "Disponível":
-            grid_html += f'<a href="?clique_num={num}" target="_self" class="num-btn">{num}</a>'
-        elif status == "Reservado":
-            grid_html += f'<div class="num-reservado">{num}</div>'
-        else:
-            grid_html += f'<div class="num-pago">{num}</div>'
-    grid_html += '</div>'
+        st.write("")
+        botao_atualizar = st.form_submit_button("🛒 Avançar com os Números Selecionados", use_container_width=True)
 
-    st.markdown(grid_html, unsafe_allow_html=True)
     st.markdown("---")
 
     # --- CHECKOUT E PAGAMENTO ---
@@ -373,8 +320,6 @@ with st.expander("🔐 Área do Administrador"):
         with col_cancela:
             if st.button("❌ Cancelar Reserva", use_container_width=True):
                 st.session_state.numeros_status[num_admin] = "Disponível"
-                if num_admin in st.session_state.carrinho:
-                    pass
                 if num_admin in st.session_state.compradores:
                     del st.session_state.compradores[num_admin]
                 salvar_dados()
