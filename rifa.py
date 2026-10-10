@@ -37,6 +37,7 @@ st.markdown("""
         padding-left: 10px !important;
         padding-right: 10px !important;
         padding-top: 3.5rem !important; /* Espaço para o cabeçalho não cortar na nuvem */
+        padding-bottom: 5rem !important; /* Espaço extra para a faixa flutuante não cobrir o final */
         max-width: 100% !important;
     }
 
@@ -49,6 +50,25 @@ st.markdown("""
             margin: 0 auto;
             display: block;
         }
+    }
+    
+    /* --- FAIXA FLUTUANTE FIXA NA TELA (STICKY BANNER) --- */
+    .banner-flutuante {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #ffcc00, #ff9900);
+        color: #000000;
+        padding: 10px 18px;
+        border-radius: 25px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.7);
+        z-index: 999999;
+        text-align: center;
+        width: 90%;
+        max-width: 450px;
+        border: 2px solid #ffffff;
+        font-weight: bold;
     }
     
     /* --- PROMOÇÕES --- */
@@ -290,9 +310,15 @@ with aba_comprar:
     st.subheader("👇 Clique nos quadradinhos para selecionar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
-    # AVISO EXPLÍCITO EM DESTAQUE QUANDO HOUVER NÚMEROS SELECIONADOS
+    # BARRA FLUTUANTE FIXA NA TELA ENQUANTO HOUVER NÚMEROS SELECIONADOS
     if len(st.session_state.carrinho) > 0:
-        st.warning(f"🛒 **{len(st.session_state.carrinho)} número(s) selecionado(s)!** Role até o **final da grade de números (no fim da página)** para preencher seu nome e gerar o PIX.")
+        qtd_c = len(st.session_state.carrinho)
+        st.markdown(f"""
+            <div class="banner-flutuante">
+                🛒 <b>{qtd_c} número(s) selecionado(s)!</b><br>
+                <span style="font-size: 0.85em; font-weight: normal;">Role até o final da página para informar seu Nome e pagar.</span>
+            </div>
+        """, unsafe_allow_html=True)
 
     cols_por_linha = 5
     for i in range(0, TOTAL_NUMEROS, cols_por_linha):
