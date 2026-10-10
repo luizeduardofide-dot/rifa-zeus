@@ -23,7 +23,7 @@ st.markdown("""
     /* --- CORREÇÃO DO LOGÓTIPO NO CELULAR --- */
     @media (max-width: 768px) {
         div[data-testid="column"]:first-child img {
-            max-width: 100px !important;
+            max-width: 90px !important;
             margin: 0 auto;
             display: block;
         }
@@ -233,17 +233,18 @@ with aba_comprar:
     </div>
     """, unsafe_allow_html=True)
 
-    # --- SELEÇÃO DE NÚMEROS RÁPIDA (CLIQUE DIRETO) ---
+    # --- CAPTURA DE MÚLTIPLOS CLIQUES NA GRADE ---
     st.subheader("👇 Clique nos números que deseja comprar:")
     st.markdown("* 🟦 **Disponíveis** | 🟩 **Selecionados** | 🟡 **Reservados** | 🔴 **Pagos**")
 
     query_params = st.query_params
-    if "clique_num" in query_params:
+    if "toggle_num" in query_params:
         try:
-            num_clicado = int(query_params["clique_num"])
+            num_clicado = int(query_params["toggle_num"])
             if 1 <= num_clicado <= TOTAL_NUMEROS:
-                status_atual = st.session_state.numeros_status[num_clicado]
-                if status_atual == "Disponível":
+                # Verifica se o número ainda está disponível no banco real antes de mexer
+                status_atual, _ = carregar_dados()
+                if status_atual[num_clicado] == "Disponível":
                     if num_clicado in st.session_state.carrinho:
                         st.session_state.carrinho.remove(num_clicado)
                     else:
@@ -253,13 +254,14 @@ with aba_comprar:
         except:
             pass
 
+    # Constrói a grelha mantendo os números do carrinho na cor verde selecionada
     grid_html = '<div class="rifa-grid">'
     for num in range(1, TOTAL_NUMEROS + 1):
         status = st.session_state.numeros_status[num]
         if num in st.session_state.carrinho:
-            grid_html += f'<a href="?clique_num={num}" target="_self" class="num-btn num-selecionado">{num}</a>'
+            grid_html += f'<a href="?toggle_num={num}" target="_self" class="num-btn num-selecionado">{num}</a>'
         elif status == "Disponível":
-            grid_html += f'<a href="?clique_num={num}" target="_self" class="num-btn">{num}</a>'
+            grid_html += f'<a href="?toggle_num={num}" target="_self" class="num-btn">{num}</a>'
         elif status == "Reservado":
             grid_html += f'<div class="num-reservado">{num}</div>'
         else:
