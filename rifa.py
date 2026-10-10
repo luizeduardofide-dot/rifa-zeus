@@ -43,16 +43,7 @@ st.markdown("""
 
     img { border-radius: 15px; }
     
-    /* --- CORREÇÃO DA LOGO NO MOBILE --- */
-    @media (max-width: 768px) {
-        div[data-testid="stColumn"]:first-child img {
-            max-width: 80px !important;
-            margin: 0 auto;
-            display: block;
-        }
-    }
-    
-    /* --- FAIXA FLUTUANTE FIXA NA TELA (MAIOR E MAIS VISÍVEL) --- */
+    /* --- FAIXA FLUTUANTE FIXA NA TELA --- */
     .banner-flutuante {
         position: fixed;
         bottom: 20px;
@@ -145,7 +136,7 @@ CHAVE_PIX = "rifaequipezeus@gmail.com"
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
 
-# --- FUNÇÃO PARA PADRONIZAR IMAGENS EM TAMANHO QUADRADO (1:1) ---
+# --- FUNÇÃO DE PADRONIZAÇÃO DE IMAGENS EM TAMANHO QUADRADO (1:1) ---
 def carregar_imagem_padronizada(caminho, tamanho=(600, 600)):
     if os.path.exists(caminho):
         img = Image.open(caminho)
@@ -230,7 +221,8 @@ col_logo, col_titulo = st.columns([1, 3], vertical_alignment="center")
 
 with col_logo:
     if os.path.exists("fotologo.jpeg"):
-        st.image("fotologo.jpeg", use_container_width=True)
+        # Largura controlada diretamente no Python (sem mexer nas fotos dos prêmios)
+        st.image("fotologo.jpeg", width=90)
 
 with col_titulo:
     st.markdown("<h2 style='margin: 0; padding: 0; font-size: 1.8rem; font-weight: 800;'>Rifa - Equipe Zeus</h2>", unsafe_allow_html=True)
