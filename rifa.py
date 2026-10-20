@@ -340,11 +340,22 @@ with aba_comprar:
         st.write("**Copie a Chave PIX abaixo:**")
         st.code(CHAVE_PIX, language="text")
         
-        msg = f"Olá! Me chamo {dados['nome']}. Reservei os números [{dados['numeros_str']}] na Rifa da Equipe Zeus. Segue o comprovante do PIX no valor de R$ {dados['valor_total']:.2f}:"
+        # Monta a mensagem formatada para o WhatsApp incluindo o Telefone
+        msg = f"Olá! Me chamo *{dados['nome']}*.\nMeu WhatsApp/Telefone é: *{dados['telefone']}*\n\nReservei os seguintes números: *{dados['numeros_str']}* na Rifa da Equipe Zeus.\n\nO valor total foi de *R$ {dados['valor_total']:.2f}*.\n\nSegue o meu comprovante do PIX:"
         msg_encoded = urllib.parse.quote(msg)
+        
+        # Link do WhatsApp
         link_wpp = f"https://wa.me/{WHATSAPP_CONTATO}?text={msg_encoded}"
         
-        st.markdown(f"### 👉 **[CLIQUE AQUI PARA ENVIAR O COMPROVANTE NO WHATSAPP]({link_wpp})**", unsafe_allow_html=True)
+        # Botão HTML Verde e chamativo para o usuário não esquecer de clicar
+        st.markdown(f"""
+            <a href="{link_wpp}" target="_blank" style="text-decoration: none;">
+                <div style="background-color: #25D366; color: white; padding: 15px 20px; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 900; margin: 20px 0; box-shadow: 0px 4px 6px rgba(0,0,0,0.3); transition: 0.3s;">
+                    📲 CLIQUE AQUI PARA ENVIAR O COMPROVANTE NO WHATSAPP
+                </div>
+            </a>
+        """, unsafe_allow_html=True)
+
         if st.button("Fazer nova compra"):
             st.session_state.reserva_concluida = False
             st.session_state.dados_reserva = {}
