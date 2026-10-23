@@ -154,12 +154,15 @@ def carregar_dados():
         response = requests.get(url, headers=headers, timeout=5)
         if response.status_code == 200:
             record = response.json().get("record", {})
-            numeros = {int(k): v for k, v in record.get("numeros_status", {}).items()}
+            numeros_brutos = record.get("numeros_status", {})
             compradores = {int(k): v for k, v in record.get("compradores", {}).items()}
             
+            numeros = {}
             for i in range(INICIO_NUMERO, FIM_NUMERO + 1):
-                if i not in numeros:
-                    numeros[i] = "Disponível"
+                # Filtra apenas a nova faixa, ignorando lixos antigos de outras faixas (como 1 a 350)
+                status_salvo = numeros_brutos.get(str(i), "Disponível")
+                numeros[i] = status_salvo if status_salvo in ["Reservado", "Pago"] else "Disponível"
+                
             return numeros, compradores
     except Exception as e:
         st.error(f"Erro ao carregar dados do banco na nuvem: {e}")
@@ -443,7 +446,6 @@ st.markdown("---")
 with st.expander("🔐 Área do Administrador"):
     senha_admin = st.text_input("Senha Admin", type="password")
     if senha_admin == "zeus0709":
-        # Recarrega os dados em tempo real do banco para exibir a contagem exata
         nums_atuais, comps_atuais = carregar_dados()
         
         q_pago = sum(1 for s in nums_atuais.values() if s == "Pago")
@@ -458,11 +460,22 @@ with st.expander("🔐 Área do Administrador"):
         
         st.markdown("---")
         
+        # BOTÃO EXCLUSIVO PARA ZERAR TUDO DIRETO NO SITE
+        if st.button("🗑️ ZERAR/LIMPAR TODOS OS DADOS DA NUVEM", type="primary", use_container_width=True):
+            salvar_dados({}, {})
+            st.session_state.numeros_status = {i: "Disponível" for i in range(INICIO_NUMERO, FIM_NUMERO + 1)}
+            st.session_state.compradores = {}
+            st.success("Banco de dados zerado com sucesso! Todos os números agora estão disponíveis.")
+            time.sleep(1)
+            st.rerun()
+
+        st.markdown("---")
+        
         num_admin = st.number_input("Digite o Número que deseja gerenciar:", min_value=INICIO_NUMERO, max_value=FIM_NUMERO, step=1)
         
         col_pago, col_cancela = st.columns(2)
         with col_pago:
-            if st.button("✅ Marcar como Pago", type="primary", use_container_width=True):
+            if st.button("✅ Marcar como Pago", use_container_width=True):
                 nums_atuais[num_admin] = "Pago"
                 salvar_dados(nums_atuais, comps_atuais)
                 
