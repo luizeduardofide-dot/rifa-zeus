@@ -144,7 +144,7 @@ def carregar_imagem(caminho):
         return Image.open(caminho)
     return None
 
-# --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN (OTIMIZADO COM CACHE DE 60 SEGUNDOS) ---
+# --- SISTEMA DE INTEGRAÇÃO COM O JSONBIN ---
 @st.cache_data(ttl=60)
 def carregar_dados():
     url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}/latest"
@@ -321,7 +321,7 @@ with aba_comprar:
             idx = i + j
             if idx < len(lista_todos_numeros):
                 num = lista_todos_numeros[idx]
-                status = st.session_state.numeros_status[num]
+                status = st.session_state.numeros_status.get(num, "Disponível")
                 
                 if num in st.session_state.carrinho:
                     cols[j].button(f"{num}", key=f"btn_{num}", type="primary", use_container_width=True, on_click=toggle_numero, args=(num,))
@@ -345,14 +345,11 @@ with aba_comprar:
         st.write("**Copie a Chave PIX abaixo:**")
         st.code(CHAVE_PIX, language="text")
         
-        # Monta a mensagem formatada para o WhatsApp incluindo o Telefone
         msg = f"Olá! Me chamo *{dados['nome']}*.\nMeu WhatsApp/Telefone é: *{dados['telefone']}*\n\nReservei os seguintes números: *{dados['numeros_str']}* na Rifa da Equipe Zeus.\n\nO valor total foi de *R$ {dados['valor_total']:.2f}*.\n\nSegue o meu comprovante do PIX:"
         msg_encoded = urllib.parse.quote(msg)
         
-        # Link do WhatsApp
         link_wpp = f"https://wa.me/{WHATSAPP_CONTATO}?text={msg_encoded}"
         
-        # Botão HTML Verde e chamativo para o usuário não esquecer de clicar
         st.markdown(f"""
             <a href="{link_wpp}" target="_blank" style="text-decoration: none;">
                 <div style="background-color: #25D366; color: white; padding: 15px 20px; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 900; margin: 20px 0; box-shadow: 0px 4px 6px rgba(0,0,0,0.3); transition: 0.3s;">
@@ -446,32 +443,45 @@ st.markdown("---")
 with st.expander("🔐 Área do Administrador"):
     senha_admin = st.text_input("Senha Admin", type="password")
     if senha_admin == "zeus0709":
+        # Recarrega os dados em tempo real do banco para exibir a contagem exata
+        nums_atuais, comps_atuais = carregar_dados()
+        
+        q_pago = sum(1 for s in nums_atuais.values() if s == "Pago")
+        q_res = sum(1 for s in nums_atuais.values() if s == "Reservado")
+        q_disp = sum(1 for s in nums_atuais.values() if s == "Disponível")
+        
+        st.markdown("### 📊 Resumo do Status da Rifa")
+        col_m1, col_m2, col_m3 = st.columns(3)
+        col_m1.metric("🔴 Pagos", q_pago)
+        col_m2.metric("🟡 Reservados", q_res)
+        col_m3.metric("🟦 Disponíveis", q_disp)
+        
+        st.markdown("---")
+        
         num_admin = st.number_input("Digite o Número que deseja gerenciar:", min_value=INICIO_NUMERO, max_value=FIM_NUMERO, step=1)
         
         col_pago, col_cancela = st.columns(2)
         with col_pago:
             if st.button("✅ Marcar como Pago", type="primary", use_container_width=True):
-                numeros_atualizados, compradores_atualizados = carregar_dados()
-                numeros_atualizados[num_admin] = "Pago"
-                salvar_dados(numeros_atualizados, compradores_atualizados)
+                nums_atuais[num_admin] = "Pago"
+                salvar_dados(nums_atuais, comps_atuais)
                 
-                st.session_state.numeros_status = numeros_atualizados
-                st.session_state.compradores = compradores_atualizados
+                st.session_state.numeros_status = nums_atuais
+                st.session_state.compradores = comps_atuais
                 st.success(f"Sucesso! Número {num_admin} confirmado como PAGO.")
                 time.sleep(1)
                 st.rerun()
                 
         with col_cancela:
             if st.button("❌ Cancelar Reserva", use_container_width=True):
-                numeros_atualizados, compradores_atualizados = carregar_dados()
-                numeros_atualizados[num_admin] = "Disponível"
-                if num_admin in compradores_atualizados:
-                    del compradores_atualizados[num_admin]
+                nums_atuais[num_admin] = "Disponível"
+                if num_admin in comps_atuais:
+                    del comps_atuais[num_admin]
                 
-                salvar_dados(numeros_atualizados, compradores_atualizados)
+                salvar_dados(nums_atuais, comps_atuais)
                 
-                st.session_state.numeros_status = numeros_atualizados
-                st.session_state.compradores = compradores_atualizados
+                st.session_state.numeros_status = nums_atuais
+                st.session_state.compradores = comps_atuais
                 st.success(f"Reserva cancelada! Número {num_admin} liberado.")
                 time.sleep(1)
                 st.rerun()
