@@ -315,7 +315,13 @@ with aba_comprar:
         """, unsafe_allow_html=True)
 
     cols_por_linha = 5
-    lista_todos_numeros = list(range(INICIO_NUMERO, FIM_NUMERO + 1))
+    
+    # ORDENAÇÃO: Disponíveis primeiro (em ordem crescente), seguidos pelos indisponíveis no final
+    todos_nums = list(range(INICIO_NUMERO, FIM_NUMERO + 1))
+    lista_todos_numeros = sorted(
+        todos_nums, 
+        key=lambda n: (1 if st.session_state.numeros_status.get(n, "Disponível") != "Disponível" else 0, n)
+    )
     
     for i in range(0, len(lista_todos_numeros), cols_por_linha):
         cols = st.columns(cols_por_linha)
