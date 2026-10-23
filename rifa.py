@@ -131,7 +131,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- DADOS E CONFIGURAÇÕES DA RIFA ---
-TOTAL_NUMEROS = 350
+INICIO_NUMERO = 4540
+FIM_NUMERO = 4889
+TOTAL_NUMEROS = (FIM_NUMERO - INICIO_NUMERO) + 1  # 350 números
 CHAVE_PIX = "rifaequipezeus@gmail.com"  
 NOME_PIX = "Equipe Zeus"
 WHATSAPP_CONTATO = "5535997699577"  
@@ -155,14 +157,14 @@ def carregar_dados():
             numeros = {int(k): v for k, v in record.get("numeros_status", {}).items()}
             compradores = {int(k): v for k, v in record.get("compradores", {}).items()}
             
-            for i in range(1, TOTAL_NUMEROS + 1):
+            for i in range(INICIO_NUMERO, FIM_NUMERO + 1):
                 if i not in numeros:
                     numeros[i] = "Disponível"
             return numeros, compradores
     except Exception as e:
         st.error(f"Erro ao carregar dados do banco na nuvem: {e}")
 
-    return {i: "Disponível" for i in range(1, TOTAL_NUMEROS + 1)}, {}
+    return {i: "Disponível" for i in range(INICIO_NUMERO, FIM_NUMERO + 1)}, {}
 
 def salvar_dados(numeros_status, compradores):
     url = f"https://api.jsonbin.io/v3/b/{JSONBIN_BIN_ID}"
@@ -311,11 +313,14 @@ with aba_comprar:
         """, unsafe_allow_html=True)
 
     cols_por_linha = 5
-    for i in range(0, TOTAL_NUMEROS, cols_por_linha):
+    lista_todos_numeros = list(range(INICIO_NUMERO, FIM_NUMERO + 1))
+    
+    for i in range(0, len(lista_todos_numeros), cols_por_linha):
         cols = st.columns(cols_por_linha)
         for j in range(cols_por_linha):
-            num = i + j + 1
-            if num <= TOTAL_NUMEROS:
+            idx = i + j
+            if idx < len(lista_todos_numeros):
+                num = lista_todos_numeros[idx]
                 status = st.session_state.numeros_status[num]
                 
                 if num in st.session_state.carrinho:
@@ -441,7 +446,7 @@ st.markdown("---")
 with st.expander("🔐 Área do Administrador"):
     senha_admin = st.text_input("Senha Admin", type="password")
     if senha_admin == "zeus0709":
-        num_admin = st.number_input("Digite o Número que deseja gerenciar:", min_value=1, max_value=TOTAL_NUMEROS, step=1)
+        num_admin = st.number_input("Digite o Número que deseja gerenciar:", min_value=INICIO_NUMERO, max_value=FIM_NUMERO, step=1)
         
         col_pago, col_cancela = st.columns(2)
         with col_pago:
