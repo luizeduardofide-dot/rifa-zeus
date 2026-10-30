@@ -208,15 +208,12 @@ def toggle_numero(num):
 # --- CÁLCULO DE TOTAL (10 por R$ 27 e 4 por R$ 12) ---
 def calcular_total(qtd):
     total = 0
-    # Pacotes de 10 por R$ 27,00
     while qtd >= 10:
         total += 27.0
         qtd -= 10
-    # Pacotes de 4 por R$ 12,00
     while qtd >= 4:
         total += 12.0
         qtd -= 4
-    # Unidades restantes por R$ 3,00 cada
     total += qtd * 3.0
     return total
 
@@ -279,6 +276,10 @@ with aba_comprar:
         <div class="promo-card">
             <div class="promo-qtd">🎟️ 1 Número</div>
             <div class="promo-valor">R$ 3,00</div>
+        </div>
+        <div class="promo-card">
+            <div class="promo-qtd">🎟️ 3 Números</div>
+            <div class="promo-valor">R$ 9,00</div>
         </div>
         <div class="promo-card destaque">
             <div class="promo-qtd">🔥 4 Números</div>
